@@ -56,6 +56,13 @@ public class AiChatMessageService {
                 }
 
                 @Override
+                public void onComplete(Response<AiMessage> response) {
+                    if (onCompleteConsumer != null) {
+                        onCompleteConsumer.accept(response);
+                    }
+                }
+
+                @Override
                 public void onError(Throwable throwable) {
                     if (onErrorConsumer != null) {
                         onErrorConsumer.accept(throwable);

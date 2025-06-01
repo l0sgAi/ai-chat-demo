@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -75,9 +76,11 @@ public class AiChatServiceImpl implements AiChatService {
                             return; // 已取消，不再处理
                         }
                         try {
-                            // 换行符转义：如果token以换行符为结尾，转换成<br>
                             sb.append(token);
+//                            log.info("当前token：{}",token);
+                            // HTML 换行符转义：转换成<br>
                             token = token.replace("\n", "<br>");
+                            // HTML 空格转义：转换成&nbsp;
                             token = token.replace(" ", "&nbsp;");
                             finalEmitter.send(SseEmitter.event().data(token));
                             // log.info("当前段数据:{}", token);
@@ -88,7 +91,7 @@ public class AiChatServiceImpl implements AiChatService {
                     .onComplete(response -> {
                         finalEmitter.complete();
                         emitterManager.removeEmitter(sessionId); // 只在流结束后移除
-                        log.info("最终拼接的数据:{}", sb);
+//                        log.info("最终拼接的数据:{} | token使用:{}", sb,response.tokenUsage().totalTokenCount());
                         tryUpdateMessage(aiMessagePair,
                                 AiMessageStatusEnum.FINISHED.getCode(),
                                 sb.toString(),
@@ -118,6 +121,87 @@ public class AiChatServiceImpl implements AiChatService {
             emitterManager.removeEmitter(sessionId); // 捕获到异常时移除
         }
         return CompletableFuture.completedFuture(true);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> handleQuestionAsyncByVirtualThread(AiChatParamDTO aiChatParamDTO, String sessionId) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (emitterManager.isOverLoad()) return false;
+            SseEmitter emitter = emitterManager.getEmitter(sessionId);
+            if (emitter == null) {
+                if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
+                    emitter = emitterManager.getEmitter(sessionId);
+                } else {
+                    return false;
+                }
+            }
+            emitterManager.notifyThreadCount();
+
+            SseEmitter finalEmitter = emitter;
+            StringBuffer sb = new StringBuffer();
+            AiMessagePair aiMessagePair = new AiMessagePair();
+            aiMessagePair.setSseSessionId(sessionId);
+            aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
+            aiMessagePair.setModelUsed(aiChatParamDTO.getModelId());
+
+            AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
+            if (aiConfig == null || aiConfig.getModelType() != 0) {
+                return false;
+            }
+
+            AtomicBoolean updated = new AtomicBoolean(false);
+            try {
+                aiChatMessageService.chatMessageStream(aiConfig, aiChatParamDTO.getQuestion())
+                        .onNext(token -> {
+                            if (updated.get()) {
+                                log.warn("===>已经取消ai生成");
+                                return;
+                            }
+                            try {
+                                sb.append(token);
+                                log.info("当前token：{}", token);
+                                token = token.replace("\n", "<br>");
+                                token = token.replace(" ", "&nbsp;");
+                                finalEmitter.send(SseEmitter.event().data(token));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .onComplete(response -> {
+                            finalEmitter.complete();
+                        log.info("最终拼接的数据:{} | token使用:{}", sb,response.tokenUsage().totalTokenCount());
+                            emitterManager.removeEmitter(sessionId);
+                            tryUpdateMessage(aiMessagePair,
+                                    AiMessageStatusEnum.FINISHED.getCode(),
+                                    sb.toString(),
+                                    response.tokenUsage().totalTokenCount(),
+                                    updated);
+                        })
+                        .onError(e -> {
+                            log.error("ai对话|流式输出报错:{}", e.getMessage());
+                            try {
+                                finalEmitter.send(SseEmitter.event().data("[错误] " + e.getMessage()));
+                                finalEmitter.completeWithError(e);
+                            } catch (IOException ioException) {
+                                finalEmitter.completeWithError(ioException);
+                            }
+                            finalEmitter.complete();
+                            emitterManager.removeEmitter(sessionId);
+                            tryUpdateMessage(aiMessagePair,
+                                    AiMessageStatusEnum.STOPPED.getCode(),
+                                    sb.toString(),
+                                    null,
+                                    updated);
+                        })
+                        .start();
+            } catch (Exception e) {
+                log.error("处理ai对话报错:{}", e.getMessage());
+                finalEmitter.completeWithError(e);
+                emitterManager.removeEmitter(sessionId);
+            }
+
+            return true;
+        }, Executors.newVirtualThreadPerTaskExecutor());
     }
 
     // ai回答推流sse
@@ -151,3 +235,5 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
 }
+
+

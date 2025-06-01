@@ -12,6 +12,11 @@ public interface AiChatService {
      */
     CompletableFuture<Boolean> handleQuestionAsync(AiChatParamDTO aiChatParamDTO, String sessionId);
 
+    /**
+     * 获取会话 虚拟线程
+     */
+    CompletableFuture<Boolean> handleQuestionAsyncByVirtualThread(AiChatParamDTO aiChatParamDTO, String sessionId);
+
     /** 获取流式返回结果*/
     SseEmitter getEmitter(String sessionId);
 }

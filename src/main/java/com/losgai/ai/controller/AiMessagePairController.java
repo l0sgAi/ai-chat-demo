@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api/email/ai/message/pair")
+@RequestMapping("/message/pair")
 public class AiMessagePairController {
     
     private final AiMessagePairService aiMessagePairService;

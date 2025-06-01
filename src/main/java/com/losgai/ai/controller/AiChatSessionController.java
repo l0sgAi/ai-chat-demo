@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@RequestMapping("/api/email/ai/session")
+@RequestMapping("/session")
 public class AiChatSessionController {
 
     private final AiChatSessionService aiChatSessionService;

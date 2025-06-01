@@ -4,10 +4,17 @@ import com.losgai.ai.enums.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<String> handleNoResourceFound(NoResourceFoundException e) {
+        log.error("[资源未找到] {}", e.getMessage());
+        return Result.error("资源未找到：" + e.getResourcePath());
+    }
 
     // 处理所有未被捕获的异常（兜底）
     @ExceptionHandler(Exception.class)
