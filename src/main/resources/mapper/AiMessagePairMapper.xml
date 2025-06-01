@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.losgai.ai.mapper.AiMessagePairMapper">
+
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.AiMessagePair">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="sessionId" column="session_id" jdbcType="BIGINT"/>
+            <result property="sseSessionId" column="sse_session_id" jdbcType="VARCHAR"/>
+            <result property="userContent" column="user_content" jdbcType="VARCHAR"/>
+            <result property="aiContent" column="ai_content" jdbcType="VARCHAR"/>
+            <result property="modelUsed" column="model_used" jdbcType="INTEGER"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="tokens" column="tokens" jdbcType="INTEGER"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="responseTime" column="response_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,session_id,sse_session_id,
+        user_content,ai_content,model_used,
+        status,tokens,create_time,
+        response_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from ai_message_pair
+        where  id = #{id,jdbcType=BIGINT} 
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from ai_message_pair
+        where  id = #{id,jdbcType=BIGINT} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiMessagePair" useGeneratedKeys="true">
+        insert into ai_message_pair
+        ( id,session_id,sse_session_id
+        ,user_content,ai_content,model_used
+        ,status,tokens,create_time
+        ,response_time)
+        values (#{id,jdbcType=BIGINT},#{sessionId,jdbcType=BIGINT},#{sseSessionId,jdbcType=VARCHAR}
+        ,#{userContent,jdbcType=VARCHAR},#{aiContent,jdbcType=VARCHAR},#{modelUsed,jdbcType=INTEGER}
+        ,#{status,jdbcType=TINYINT},#{tokens,jdbcType=INTEGER},#{createTime,jdbcType=TIMESTAMP}
+        ,#{responseTime,jdbcType=TIMESTAMP})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiMessagePair" useGeneratedKeys="true">
+        insert into ai_message_pair
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="sessionId != null">session_id,</if>
+                <if test="sseSessionId != null">sse_session_id,</if>
+                <if test="userContent != null">user_content,</if>
+                <if test="aiContent != null">ai_content,</if>
+                <if test="modelUsed != null">model_used,</if>
+                <if test="status != null">status,</if>
+                <if test="tokens != null">tokens,</if>
+                <if test="createTime != null">create_time,</if>
+                <if test="responseTime != null">response_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id,jdbcType=BIGINT},</if>
+                <if test="sessionId != null">#{sessionId,jdbcType=BIGINT},</if>
+                <if test="sseSessionId != null">#{sseSessionId,jdbcType=VARCHAR},</if>
+                <if test="userContent != null">#{userContent,jdbcType=VARCHAR},</if>
+                <if test="aiContent != null">#{aiContent,jdbcType=VARCHAR},</if>
+                <if test="modelUsed != null">#{modelUsed,jdbcType=INTEGER},</if>
+                <if test="status != null">#{status,jdbcType=TINYINT},</if>
+                <if test="tokens != null">#{tokens,jdbcType=INTEGER},</if>
+                <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+                <if test="responseTime != null">#{responseTime,jdbcType=TIMESTAMP},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.AiMessagePair">
+        update ai_message_pair
+        <set>
+                <if test="sessionId != null">
+                    session_id = #{sessionId,jdbcType=BIGINT},
+                </if>
+                <if test="sseSessionId != null">
+                    sse_session_id = #{sseSessionId,jdbcType=VARCHAR},
+                </if>
+                <if test="userContent != null">
+                    user_content = #{userContent,jdbcType=VARCHAR},
+                </if>
+                <if test="aiContent != null">
+                    ai_content = #{aiContent,jdbcType=VARCHAR},
+                </if>
+                <if test="modelUsed != null">
+                    model_used = #{modelUsed,jdbcType=INTEGER},
+                </if>
+                <if test="status != null">
+                    status = #{status,jdbcType=TINYINT},
+                </if>
+                <if test="tokens != null">
+                    tokens = #{tokens,jdbcType=INTEGER},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime,jdbcType=TIMESTAMP},
+                </if>
+                <if test="responseTime != null">
+                    response_time = #{responseTime,jdbcType=TIMESTAMP},
+                </if>
+        </set>
+        where   id = #{id,jdbcType=BIGINT} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.AiMessagePair">
+        update ai_message_pair
+        set 
+            session_id =  #{sessionId,jdbcType=BIGINT},
+            sse_session_id =  #{sseSessionId,jdbcType=VARCHAR},
+            user_content =  #{userContent,jdbcType=VARCHAR},
+            ai_content =  #{aiContent,jdbcType=VARCHAR},
+            model_used =  #{modelUsed,jdbcType=INTEGER},
+            status =  #{status,jdbcType=TINYINT},
+            tokens =  #{tokens,jdbcType=INTEGER},
+            create_time =  #{createTime,jdbcType=TIMESTAMP},
+            response_time =  #{responseTime,jdbcType=TIMESTAMP}
+        where   id = #{id,jdbcType=BIGINT} 
+    </update>
+
+    <update id="updateBySseIdSelective">
+        update ai_message_pair
+        <set>
+            <if test="sessionId != null">
+                session_id = #{sessionId,jdbcType=BIGINT},
+            </if>
+            <if test="userContent != null">
+                user_content = #{userContent,jdbcType=VARCHAR},
+            </if>
+            <if test="aiContent != null">
+                ai_content = #{aiContent,jdbcType=VARCHAR},
+            </if>
+            <if test="modelUsed != null">
+                model_used = #{modelUsed,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                `status` = #{status,jdbcType=TINYINT},
+            </if>
+            <if test="tokens != null">
+                tokens = #{tokens,jdbcType=INTEGER},
+            </if>
+            <if test="responseTime != null">
+                response_time = #{responseTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where sse_session_id = #{sseSessionId,jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectBySessionId" resultType="com.losgai.ai.entity.AiMessagePair">
+        select
+        <include refid="Base_Column_List" />
+        from ai_message_pair
+        where session_id = #{id,jdbcType=BIGINT}
+    </select>
+
+    <delete id="deleteBySessionId">
+        delete
+        from ai_message_pair
+        where session_id = #{id,jdbcType=BIGINT}
+    </delete>
+
+</mapper>
