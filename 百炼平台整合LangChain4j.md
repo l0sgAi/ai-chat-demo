@@ -517,91 +517,6 @@ public class AiChatServiceImpl implements AiChatService {
         return CompletableFuture.completedFuture(true);
     }
 
-    @Override
-    public Boolean handleQuestion(AiChatParamDTO aiChatParamDTO, String sessionId) {
-        if (emitterManager.isOverLoad()) return false;
-        // 获取会话id对应的sseEmitter
-        SseEmitter emitter = emitterManager.getEmitter(sessionId);
-        // 没有则先创建一个sseEmitter
-        if (emitter == null) {
-            if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
-                emitter = emitterManager.getEmitter(sessionId);
-            } else {
-                // 创建失败，一般是由于队列已满，直接返回false
-                return false;
-            }
-        }
-        // 先发送一次队列人数通知
-        emitterManager.notifyThreadCount();
-        // 最终指向的emitter对象
-        SseEmitter finalEmitter = emitter;
-        StringBuffer sb = new StringBuffer();
-        // 开始对话，返回token流
-        // 封装插入的信息对象
-        AiMessagePair aiMessagePair = new AiMessagePair();
-        aiMessagePair.setSseSessionId(sessionId);
-        aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
-        aiMessagePair.setModelUsed(aiChatParamDTO.getModelId());
-        AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
-        if (aiConfig == null || aiConfig.getModelType() != 0) {
-            // 返回的配置 不是大模型，直接返回false
-            return false;
-        }
-        // 标志位，判断是否更新成功，防止重复插入
-        AtomicBoolean updated = new AtomicBoolean(false);
-        try {
-            aiChatMessageService.chatMessageStream(aiConfig, aiChatParamDTO.getQuestion())
-                    .onNext(token -> {
-                        if (updated.get()) {
-                            log.warn("===>已经取消ai生成");
-                            return; // 已取消，不再处理
-                        }
-                        try {
-                            // 换行符转义：如果token以换行符为结尾，转换成<br>
-                            sb.append(token);
-                            token = token.replace("\n", "<br>");
-                            token = token.replace(" ", " ");
-                            finalEmitter.send(SseEmitter.event().data(token));
-                            // log.info("当前段数据:{}", token);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .onComplete(response -> {
-                        finalEmitter.complete();
-                        emitterManager.removeEmitter(sessionId); // 只在流结束后移除
-                        log.info("最终拼接的数据:{}", sb);
-                        tryUpdateMessage(aiMessagePair,
-                                AiMessageStatusEnum.FINISHED.getCode(),
-                                sb.toString(),
-                                response.tokenUsage().totalTokenCount(),
-                                updated);
-                    })
-                    .onError(e -> {
-                        log.error("ai对话|流式输出报错:{}", e.getMessage());
-                        try {
-                            finalEmitter.send(SseEmitter.event().data("[错误] " + e.getMessage()));
-                            finalEmitter.completeWithError(e);
-                        } catch (IOException ioException) {
-                            finalEmitter.completeWithError(ioException);
-                        }
-                        finalEmitter.complete();
-                        emitterManager.removeEmitter(sessionId); // 出错时也移除
-                        tryUpdateMessage(aiMessagePair,
-                                AiMessageStatusEnum.STOPPED.getCode(),
-                                sb.toString(),
-                                null,
-                                updated);
-                    })
-                    .start();
-        } catch (Exception e) {
-            log.error("处理ai对话报错:{}", e.getMessage());
-            finalEmitter.completeWithError(e);
-            emitterManager.removeEmitter(sessionId); // 捕获到异常时移除
-        }
-        return true;
-    }
-
     // ai回答推流sse
     @Override
     public SseEmitter getEmitter(String sessionId) {
@@ -676,7 +591,7 @@ public CompletableFuture<Boolean> handleQuestionAsyncByVirtualThread(AiChatParam
                             sb.append(token);
                             log.info("当前token：{}", token);
                             token = token.replace("\n", "<br>");
-                            token = token.replace(" ", "&nbsp;");
+                            token = token.replace(" ", " ");
                             finalEmitter.send(SseEmitter.event().data(token));
                         } catch (IOException e) {
                             throw new RuntimeException(e);
