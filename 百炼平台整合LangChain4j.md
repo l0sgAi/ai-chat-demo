@@ -1,3 +1,7 @@
+---
+highlight: androidstudio
+---
+
 # 阿里百炼平台整合QWEN与langchain4j
 
 *阿里的`QWEN3`是一个性价比比较高的大模型，非常适合用来练手，本文将会教会大家去使用百炼平台整合简单的大模型应用到您的应用程序中，使用`langchain4j`。本人也是一个初学者，难免会有一些问题和错误，还请大家指正。*
@@ -6,17 +10,17 @@
 
 ### 阅读本文前应该有的知识基础
 
-- Java基础
+* Java基础
 
-- Java Web基础
+* Java Web基础
 
-- 数据库基础
+* 数据库基础
 
-- 包管理 (Maven、gradle等)
+* 包管理 (Maven、gradle等)
 
-- Spring基础、SSM整合、SpringBoot等
+* Spring基础、SSM整合、SpringBoot等
 
----
+***
 
 ### 文本流式对话输出
 
@@ -30,11 +34,13 @@
 
 2. 获取`API KEY` ; 官方文档建议使用系统变量，按照官方文档教程即可，但是如果你需要对使用的大模型进行配置，则需要建一个配置表，通过数据库传入大模型配置参数，这个后面会详细介绍。官方文档：[百炼控制台](https://bailian.console.aliyun.com/?tab=doc#/doc/)
 
+![apikey.PNG](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/73e3d63f18a540309db4378cf6244366~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgbDBzZ0Fp:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMzI4MDg5Mzk2MzI3NjQzIn0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1749548056&x-orig-sign=%2FwmlB8UT4qrC2A6Bo7pElt3P4Jw%3D)
+
 ##### 开始测试
 
-- 进入你的`SpringBoot`项目，新建一个测试
+* 进入你的`SpringBoot`项目，新建一个测试。
 
-- 引入相关`maven`依赖，如果需要其它版本，请到[Maven仓库](https://mvnrepository.com/)中搜索
+* 引入相关`maven`依赖，如果需要其它版本，请到[Maven仓库](https://mvnrepository.com/)中搜索，我使用`0.35.0`版本的原因主要是因为支持`jdk8`，新版`langchain4j`需要`jdk17`，这个版本下就可以使用`SpringAI`了。
 
 ```xml
 <!-- OpenAI compatible API (支持 Qwen 百炼 OpenAI 模式) -->
@@ -46,7 +52,7 @@
 </dependency>
 ```
 
-- 开始编写测试，正常配置的话应该会在控制台分段输出ai回复
+* 开始编写测试，正常配置的话应该会在控制台分段输出ai回复
 
 ```java
 import com.losgai.ai.entity.AiConfig;
@@ -81,13 +87,19 @@ public class AiApplicationTests {
 
         // 构建模型对象，使用百炼 OpenAI 兼容模式
         OpenAiStreamingChatModel model = OpenAiStreamingChatModel.builder()
-                .apiKey(aiConfig.getApiKey()) // 这里也可以直接填你的apiKey
-                .baseUrl(aiConfig.getApiDomain()) // 百炼兼容地址
-                .modelName(aiConfig.getModelId()) // qwen-turbo比较便宜，测试用
+                // 这里也可以直接填你的apiKey
+                .apiKey(aiConfig.getApiKey()) 
+                // 百炼域名地址 https://dashscope.aliyuncs.com/compatible-mode/v1
+                .baseUrl(aiConfig.getApiDomain()) 
                 // qwen-plus、qwen-max、qwen-turbo 等
-                .temperature(aiConfig.getSimilarityTopK()) // 温度，与输出的随机度有关
-                .topP(aiConfig.getSimilarityTopP()) // 限制采样时选择的概率质量范围
-                .maxTokens(aiConfig.getMaxContextMsgs()) // 最大输出token数量
+                // qwen-turbo 比较便宜，推荐测试用
+                .modelName(aiConfig.getModelId()) 
+                // 温度，与输出的随机度有关 参考值 0.1-1.0
+                .temperature(aiConfig.getSimilarityTopK()) 
+                // 限制采样时选择的概率质量范围 参考值 0.9-1.0
+                .topP(aiConfig.getSimilarityTopP()) 
+                // 最大输出token数量 参考值 1000-10000
+                .maxTokens(aiConfig.getMaxContextMsgs()) 
                 .build();
 
         // 创建一个流式响应处理器
@@ -156,13 +168,13 @@ public class AiApplicationTests {
 
 测试成功之后，就可以开始封装自己的AI流式对话方法了。
 
-**平台提供多种模型，模型列表：[模型列表_大模型服务平台百炼(Model Studio)-阿里云帮助中心](https://help.aliyun.com/zh/model-studio/getting-started/models)**
+**平台提供多种模型，模型列表：[模型列表\_大模型服务平台百炼(Model Studio)-阿里云帮助中心](https://help.aliyun.com/zh/model-studio/getting-started/models)**
 
 ##### 封装使用
 
 > 开始之前，我们需要一些准备工作，创建一些数据表，我这里使用的是`Mysql8`, 大家也可以选择任意自己喜欢的数据库，具体的建表我放在文末。如果你还使用`Mybatis` (推荐), 可以使用`mybatis-generator`或`mybatisX-generator`生成对应的实体类和对应的增删改查代码。
 
----
+***
 
 **根据读取的配置构建模型**
 
@@ -643,15 +655,50 @@ public CompletableFuture<Boolean> handleQuestionAsyncByVirtualThread(AiChatParam
 
 * 对于前端，可以使用[marked.js](https://github.com/markedjs/marked)+ [highlight.js](https://highlightjs.org) 进行渲染, 结合[github-markdown-css](https://github.com/sindresorhus/github-markdown-css)以获得更加美观的输出! 大家有空可以试一试。
 
----
+* 前端效果预览
+
+![微信图片\_20250603160603.png](https://p0-xtjj-private.juejin.cn/tos-cn-i-73owjymdk6/ccc9ae7c67f741bdbf658506896606ca~tplv-73owjymdk6-jj-mark-v1:0:0:0:0:5o6Y6YeR5oqA5pyv56S-5Yy6IEAgbDBzZ0Fp:q75.awebp?policy=eyJ2bSI6MywidWlkIjoiMzI4MDg5Mzk2MzI3NjQzIn0%3D&rk3s=f64ab15b&x-orig-authkey=f32326d3454f2ac7e96d3d06cdbb035152127018&x-orig-expires=1749548056&x-orig-sign=gi1O2BvwxQ0lP9apS%2FeUq7cOwYg%3D)
+
+**调用链路图 (AI生成)**
+
+```mermaid
+sequenceDiagram
+    participant 前端
+    participant Controller
+    participant AiChatServiceImpl
+    participant EmitterManager
+    participant AiChatMessageService
+    participant OpenAiStreamingChatModel
+    participant 数据库
+
+    前端->>Controller: 发起AI对话请求（HTTP/SSE）
+    Controller->>AiChatServiceImpl: 调用 handleQuestionAsync
+    AiChatServiceImpl->>EmitterManager: 获取/创建 SseEmitter
+    AiChatServiceImpl->>EmitterManager: 发送队列人数通知
+    AiChatServiceImpl->>AiChatMessageService: chatMessageStream（传递模型配置和问题）
+    AiChatMessageService->>OpenAiStreamingChatModel: 生成流式AI回复
+    OpenAiStreamingChatModel-->>AiChatMessageService: onNext(token)
+    AiChatMessageService-->>AiChatServiceImpl: onNext(token)
+    AiChatServiceImpl-->>EmitterManager: 通过 SseEmitter 推送 token
+    EmitterManager-->>前端: SSE 实时推送 token
+    OpenAiStreamingChatModel-->>AiChatMessageService: onComplete/或 onError
+    AiChatMessageService-->>AiChatServiceImpl: onComplete/或 onError
+    AiChatServiceImpl->>EmitterManager: 关闭/移除 SseEmitter
+    AiChatServiceImpl->>数据库: 更新消息状态、内容、token数
+    Controller-->>前端: SSE 连接关闭/结束
+```
+
+***
 
 # 总结
 
-本文讨论了使用`langchain4j`整合`SpringBoot`应用与大模型的方法，本人是初学者，难免有很多不足和错误，有任何问题和建议，欢迎在评论区或[GitHub讨论区](https://github.com/l0sgAi/ai-chat-demo/issues)留言！
+本文讨论了使用`langchain4j`整合`SpringBoot`应用与大模型的方法，目前只包括简单流式对话的后端代码，如果有时间后期会继续完善，带来更多的AI大模型功能整合，并进行前后端联调。
 
----
+本人是初学者，难免有很多不足和错误，有任何问题和建议，欢迎在评论区或[GitHub讨论区](https://github.com/l0sgAi/ai-chat-demo/issues)留言！此外，具体实现最好参考仓库中的代码，文章中的代码更新可能不及时。
 
-# 相关建表
+***
+
+# 相关建表 (MySQL)
 
 ### AI会话表
 
