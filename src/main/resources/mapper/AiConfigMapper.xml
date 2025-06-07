@@ -14,6 +14,7 @@
         <result property="apiKey" column="api_key" jdbcType="VARCHAR"/>
         <result property="maxContextMsgs" column="max_context_msgs" jdbcType="INTEGER"/>
         <result property="similarityTopP" column="similarity_top_p" jdbcType="FLOAT"/>
+        <result property="temperature" column="temperature" jdbcType="FLOAT"/>
         <result property="similarityTopK" column="similarity_top_k" jdbcType="FLOAT"/>
         <result property="isDefault" column="is_default" jdbcType="TINYINT"/>
         <result property="caseTags" column="case_tags" jdbcType="VARCHAR"/>
@@ -26,7 +27,7 @@
     <sql id="Base_Column_List">
         id,display_name,api_domain,
         model_name,model_type,model_id,
-        api_key,max_context_msgs,similarity_top_p,
+        api_key,max_context_msgs,similarity_top_p,temperature,
         similarity_top_k,is_default,case_tags,
         case_brief,case_remark,create_time,
         update_time
@@ -49,13 +50,14 @@
         insert into ai_config
         ( id, display_name, api_domain
         , model_name, model_type, model_id
-        , api_key, max_context_msgs, similarity_top_p
+        , api_key, max_context_msgs, similarity_top_p,temperature
         , similarity_top_k, is_default, case_tags
         , case_brief, case_remark, create_time
         , update_time)
         values ( #{id,jdbcType=INTEGER}, #{displayName,jdbcType=VARCHAR}, #{apiDomain,jdbcType=VARCHAR}
                , #{modelName,jdbcType=VARCHAR}, #{modelType,jdbcType=TINYINT}, #{modelId,jdbcType=VARCHAR}
-               , #{apiKey,jdbcType=VARCHAR}, #{maxContextMsgs,jdbcType=INTEGER}, #{similarityTopP,jdbcType=FLOAT}
+               , #{apiKey,jdbcType=VARCHAR}, #{maxContextMsgs,jdbcType=INTEGER}, #{similarityTopP,jdbcType=FLOAT},
+                #{temperature,jdbcType=FLOAT}
                , #{similarityTopK,jdbcType=FLOAT}, #{isDefault,jdbcType=TINYINT}, #{caseTags,jdbcType=VARCHAR}
                , #{caseBrief,jdbcType=VARCHAR}, #{caseRemark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}
                , #{updateTime,jdbcType=TIMESTAMP})
@@ -73,6 +75,7 @@
             <if test="apiKey != null">api_key,</if>
             <if test="maxContextMsgs != null">max_context_msgs,</if>
             <if test="similarityTopP != null">similarity_top_p,</if>
+            <if test="temperature != null">temperature,</if>
             <if test="similarityTopK != null">similarity_top_k,</if>
             <if test="isDefault != null">is_default,</if>
             <if test="caseTags != null">case_tags,</if>
@@ -91,6 +94,7 @@
             <if test="apiKey != null">#{apiKey,jdbcType=VARCHAR},</if>
             <if test="maxContextMsgs != null">#{maxContextMsgs,jdbcType=INTEGER},</if>
             <if test="similarityTopP != null">#{similarityTopP,jdbcType=FLOAT},</if>
+            <if test="temperature != null">#{temperature,jdbcType=FLOAT},</if>
             <if test="similarityTopK != null">#{similarityTopK,jdbcType=FLOAT},</if>
             <if test="isDefault != null">#{isDefault,jdbcType=TINYINT},</if>
             <if test="caseTags != null">#{caseTags,jdbcType=VARCHAR},</if>
@@ -135,6 +139,10 @@
                 similarity_top_p =
                 #{similarityTopP,jdbcType=FLOAT},
             </if>
+            <if test="temperature != null">
+                temperature =
+                #{temperature,jdbcType=FLOAT},
+            </if>
             <if test="similarityTopK != null">
                 similarity_top_k =
                 #{similarityTopK,jdbcType=FLOAT},
@@ -176,6 +184,7 @@
             api_key          = #{apiKey,jdbcType=VARCHAR},
             max_context_msgs = #{maxContextMsgs,jdbcType=INTEGER},
             similarity_top_p = #{similarityTopP,jdbcType=FLOAT},
+            temperature       = #{temperature,jdbcType=FLOAT},
             similarity_top_k = #{similarityTopK,jdbcType=FLOAT},
             is_default       = #{isDefault,jdbcType=TINYINT},
             case_tags        = #{caseTags,jdbcType=VARCHAR},

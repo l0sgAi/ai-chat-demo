@@ -49,6 +49,10 @@ public class AiConfig implements Serializable {
      */
     private Double similarityTopP;
     /**
+     * 随机度temperature
+     */
+    private Double temperature;
+    /**
      * 相似度TopK
      */
     private Double similarityTopK;

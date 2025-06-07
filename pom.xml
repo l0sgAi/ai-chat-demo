@@ -93,6 +93,28 @@
             <version>5.8.38</version>
         </dependency>
 
+        <!--langchain4j-es集成-->
+        <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-elasticsearch -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-elasticsearch</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <!--ES客户端-->
+        <!-- https://mvnrepository.com/artifact/co.elastic.clients/elasticsearch-java -->
+        <dependency>
+            <groupId>co.elastic.clients</groupId>
+            <artifactId>elasticsearch-java</artifactId>
+            <version>8.15.5</version> <!--这里选择和你的实际ES版本匹配的版本-->
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

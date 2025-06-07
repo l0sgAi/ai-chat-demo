@@ -8,6 +8,7 @@ import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.service.AiChatService;
+import com.losgai.ai.service.AiChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

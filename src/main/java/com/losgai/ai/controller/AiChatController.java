@@ -25,7 +25,9 @@ public class AiChatController {
     @PostMapping("/send")
     public Result<String> sendQuestion(@RequestBody AiChatParamDTO aiChatParamDTO) {
         String sessionId = UUID.randomUUID() + "_" + currentTimeMillis();
-        CompletableFuture<Boolean> future = aiChatService.handleQuestionAsyncByVirtualThread(aiChatParamDTO, sessionId);
+        CompletableFuture<Boolean> future = aiChatService.handleQuestionAsync(aiChatParamDTO, sessionId);
+        // JDK21+ 可以使用虚拟线程
+//        CompletableFuture<Boolean> future = aiChatService.handleQuestionAsyncByVirtualThread(aiChatParamDTO, sessionId);
         // 立即获取结果（因为拒绝时会同步返回）
         boolean accepted = future.join();
         if (!accepted) {

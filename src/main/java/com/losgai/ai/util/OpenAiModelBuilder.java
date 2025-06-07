@@ -11,7 +11,7 @@ public class OpenAiModelBuilder {
                 .apiKey(config.getApiKey())
                 .baseUrl(config.getApiDomain()) // 如 https://dashscope.aliyuncs.com/compatible-mode/v1
                 .modelName(config.getModelId()) // 如 qwen-turbo-latest
-                .temperature(config.getSimilarityTopK()) // 可从 config 拓展配置
+                .temperature(config.getTemperature()) // 可从 config 拓展配置
                 .topP(config.getSimilarityTopP())
                 .maxTokens(config.getMaxContextMsgs())
                 .apiKey(config.getApiKey())

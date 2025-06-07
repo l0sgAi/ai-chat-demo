@@ -1,24 +1,13 @@
-package com.losgai.ai.service.impl;
+package com.losgai.ai.global;
 
-import com.losgai.ai.entity.AiConfig;
-import com.losgai.ai.util.OpenAiModelBuilder;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import dev.langchain4j.model.output.Response;
-import org.springframework.stereotype.Service;
 
 import java.util.function.Consumer;
 
-@Service
-public class AiChatMessageService {
-
-    public ChatSession chatMessageStream(AiConfig config, String userMessage) {
-        OpenAiStreamingChatModel model = OpenAiModelBuilder.fromAiConfigByLangChain4j(config);
-        return new ChatSession(model, userMessage);
-    }
-
-    public static class ChatSession {
+public class ChatSession {
         private final OpenAiStreamingChatModel model;
         private final String question;
 
@@ -71,4 +60,3 @@ public class AiChatMessageService {
             });
         }
     }
-}
