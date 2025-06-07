@@ -109,10 +109,25 @@
             <version>8.15.5</version> <!--这里选择和你的实际ES版本匹配的版本-->
         </dependency>
 
+        <!--SpringBoot集成-->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
             <version>0.35.0</version>
+        </dependency>
+
+        <!--反应式组件-->
+        <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-reactor -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-reactor</artifactId>
+            <version>0.35.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>0.35.0</version> <!-- 确保与你使用的版本一致 -->
         </dependency>
 
     </dependencies>
