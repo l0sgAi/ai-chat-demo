@@ -28,6 +28,7 @@
     </scm>
     <properties>
         <java.version>21</java.version>
+        <spring-ai.version>1.0.0</spring-ai.version>
     </properties>
     <dependencies>
         <dependency>
@@ -55,6 +56,13 @@
             <version>1.0.0</version>
         </dependency>
 
+        <!--SpringAI OpenAI组件-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-openai</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        
         <!-- OpenAI compatible API (支持 Qwen 百炼 OpenAI 模式) -->
         <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai -->
         <dependency>

@@ -8,7 +8,7 @@ spring:
     password: 123456
   application:
     name: ai
-
+    
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
 

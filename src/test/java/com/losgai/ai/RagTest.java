@@ -31,16 +31,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@SpringBootTest
 public class RagTest {
 
-    @Autowired
-    private AiConfigMapper aiConfigMapper;
 
     @Test
     public void startEmbedding() throws IOException {
         // 也可以从数据库读取API Key
-        AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(1);
+        AiConfig aiConfig = new AiConfig();
+
+        aiConfig.setApiKey("sk...");
+        aiConfig.setApiDomain("https://dashscope.aliyuncs.com/compatible-mode/v1");
+        aiConfig.setModelId("qwen-turbo-latest");
+        aiConfig.setTemperature(0.9);
+        aiConfig.setSimilarityTopK(0.2);
+        aiConfig.setMaxContextMsgs(2048);
+        aiConfig.setSimilarityTopP(1.0);
 
         // 构建嵌入模型，使用openAI标准
         OpenAiEmbeddingModel model = OpenAiEmbeddingModel.builder()
@@ -50,7 +55,7 @@ public class RagTest {
                 .baseUrl(aiConfig.getApiDomain())
                 // 需要使用QWEN的文本向量模型 支持的维度2048、1536、1024（默认）、768、512、256、128、64
                 .modelName("text-embedding-v4")
-                .dimensions(1024)  // 直接指定向量维度
+                .dimensions(1024) // 直接指定向量维度
                 .build();
 
         // 检查模型的生成维数
@@ -62,15 +67,13 @@ public class RagTest {
                         "后期开发资金不足，是一个半成品，" +
                         "即便如此，它也在国际上获得了良好的声誉，获奖无数。" +
                         "在2025年6月5日，它的在线人数为993人。",
-                Metadata.from("gameName", "METAL GEAR SOLID V: THE PHANTOM PAIN")
-        );
+                Metadata.from("gameName", "METAL GEAR SOLID V: THE PHANTOM PAIN"));
         Embedding embedding1 = model.embed(game1.text()).content();
 
         TextSegment game2 = TextSegment.from(
                 "电子游戏:MONSTER HUNTER: WILDS在刚发售的时候销量还不错，但是后期的发展却不太理想，"
                         + "在2025年6月5日，即使刚刚更新了游戏内容不久，同时在线人数只有1.2万左右。",
-                Metadata.from("gameName", "MONSTER HUNTER: WILDS")
-        );
+                Metadata.from("gameName", "MONSTER HUNTER: WILDS"));
         Embedding embedding2 = model.embed(game2.text()).content();
 
         /*
@@ -78,20 +81,18 @@ public class RagTest {
          * 因为这个数据存储系统会把所有内容都存储在内存中，
          * 而我们的服务器内存有限。因此，我们可以将嵌入存储到 Elasticsearch 中，
          * 现在的解决方案只是测试用
-         * */
+         */
 
         // 初始化Elasticsearch实例
         // 1. 创建 RestClient（无认证、无 SSL）
         // TODO 如果在设置里打开了认证，需要配置认证信息
         RestClient restClient = RestClient.builder(
                 // 这里换成自己的ES服务器地址，如果是本地部署，直接localhost即可
-                new HttpHost("192.168.200.132", 9200)
-        ).build();
+                new HttpHost("localhost", 9200)).build();
 
         // 2. 使用 Jackson 映射器创建 Transport 层
         RestClientTransport transport = new RestClientTransport(
-                restClient, new JacksonJsonpMapper()
-        );
+                restClient, new JacksonJsonpMapper());
 
         // 3. 创建 Elasticsearch Java 客户端
         ElasticsearchClient client = new ElasticsearchClient(transport);
@@ -101,7 +102,6 @@ public class RagTest {
                 .indexName("games") // 这里换成自己的ES索引名
                 .restClient(restClient)
                 .build();
-
 
         // 5. 向ES存储文本向量
         store.add(embedding1, game1);
@@ -124,19 +124,27 @@ public class RagTest {
     @Test
     public void startQueryWithRAG() throws InterruptedException {
         // 也可以从数据库读取API Key
-        AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(1);
+        AiConfig aiConfig = new AiConfig();
+
+        aiConfig.setApiKey("sk-...");
+        aiConfig.setApiDomain("https://dashscope.aliyuncs.com/compatible-mode/v1");
+        aiConfig.setModelId("qwen-turbo-latest");
+        aiConfig.setTemperature(0.9);
+        aiConfig.setSimilarityTopK(0.2);
+        aiConfig.setMaxContextMsgs(2048);
+        aiConfig.setSimilarityTopP(1.0);
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
         // 构建嵌入模型，使用openAI标准
         OpenAiEmbeddingModel model = OpenAiEmbeddingModel.builder()
                 // 这里换成自己的API Key
-                .apiKey(aiConfig.getApiKey())
+                .apiKey("sk-...")
                 // 即为 "https://dashscope.aliyuncs.com/compatible-mode/v1"
-                .baseUrl(aiConfig.getApiDomain())
+                .baseUrl("https://dashscope.aliyuncs.com/compatible-mode/v1")
                 // 需要使用QWEN的文本向量模型 支持的维度2048、1536、1024（默认）、768、512、256、128、64
                 .modelName("text-embedding-v4")
-                .dimensions(1024)  // 直接指定向量维度
+                .dimensions(1024) // 直接指定向量维度
                 .build();
 
         // 初始化Elasticsearch实例
@@ -144,13 +152,11 @@ public class RagTest {
         // TODO 如果在设置里打开了认证，需要配置认证信息
         RestClient restClient = RestClient.builder(
                 // 这里换成自己的ES服务器地址，如果是本地部署，直接localhost即可
-                new HttpHost("192.168.200.132", 9200)
-        ).build();
+                new HttpHost("localhost", 9200)).build();
 
         // 2. 使用 Jackson 映射器创建 Transport 层
         RestClientTransport transport = new RestClientTransport(
-                restClient, new JacksonJsonpMapper()
-        );
+                restClient, new JacksonJsonpMapper());
 
         // 3. 创建 Elasticsearch Java 客户端
         ElasticsearchClient client = new ElasticsearchClient(transport);
@@ -161,8 +167,7 @@ public class RagTest {
                 .restClient(restClient)
                 .build();
 
-
-        // 5.  创建内容检索器
+        // 5. 创建内容检索器
         ContentRetriever contentRetriever = EmbeddingStoreContentRetriever.builder()
                 .embeddingStore(store)
                 .embeddingModel(model)
@@ -182,13 +187,15 @@ public class RagTest {
         Flux<String> responseFlux = assistantStream.chat(question);
         // 订阅 Flux 实现流式输出（控制台输出或 SSE 推送）
         responseFlux.subscribe(
-                token -> log.info("输出token:{}", token),             // 每个token响应
+                token -> log.info("输出token:{}", token), // 每个token响应
                 error -> {
                     log.error("出错：", error);
                     countDownLatch.countDown(); // 停止倒计时
-                },         // 错误处理
-                () -> log.info("\n回答完毕！")                // 流结束
-        );
+                }, // 错误处理
+                () -> {// 流结束
+                    log.info("\n回答完毕！");
+                    countDownLatch.countDown(); // 停止倒计时
+                });
 
         // 阻塞主线程最多60s 等待结果
         countDownLatch.await(60, TimeUnit.SECONDS);
