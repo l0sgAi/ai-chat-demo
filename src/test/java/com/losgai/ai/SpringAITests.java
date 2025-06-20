@@ -32,7 +32,7 @@ public class SpringAITests {
 
         // 为对话提供高级指令。例如，您可以使用系统消息指示生成器像某个角色一样行事，或以特定格式提供答案。
         Message sysMessage = // 添加系统消息
-                new SystemMessage("你是一个负责任的、礼貌的AI助手，你使用的模型是Claude-4.0.");
+                new SystemMessage("你是一个负责任的、礼貌的AI助手。");
 
         // 用户输入的问题文本，它们代表问题、提示或您希望生成器响应的任何输入。
         Message userMessage =
@@ -105,6 +105,7 @@ public class SpringAITests {
                     // 更新最后一个响应
                     lastResponse.set(token);
                 },
+                // 反应式流在报错时会直接中断
                 error -> {
                     log.error("出错：", error);
                     // 错误，停止倒计时

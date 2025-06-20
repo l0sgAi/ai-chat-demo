@@ -2,10 +2,14 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     #MySQL配置
+#    driverClassName: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.200.132:3306/AIDB?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+#    username: root
+#    password: 123456
+    url: jdbc:mysql://172.17.10.4:3306/email_db?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: liujin
+    password: 1q2w3e4r5t
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.200.132:3306/AIDB?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
-    username: root
-    password: 123456
   application:
     name: ai
     
@@ -13,4 +17,4 @@ mybatis:
   mapper-locations: classpath:mapper/**/*.xml
 
 server:
-  port: 8585
+  port: 8575
