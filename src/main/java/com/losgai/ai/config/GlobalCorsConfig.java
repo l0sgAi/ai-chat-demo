@@ -17,10 +17,10 @@ public class GlobalCorsConfig {
             @Override
             public void addCorsMappings(@NotNull CorsRegistry registry) {
                 registry.addMapping("/**") // 所有路径
-                        .allowedOrigins("*") // 允许所有来源，生产环境建议换成前端地址
+                        .allowedOriginPatterns("http://localhost:5173") // 前端地址
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
-                        .allowCredentials(false) // 如果有 Cookie 则为 true
+                        .allowCredentials(true) // 如果有 Cookie 则为 true
                         .maxAge(3600); // 预检请求的缓存时间（秒）
             }
         };

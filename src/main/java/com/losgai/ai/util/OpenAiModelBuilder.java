@@ -1,6 +1,6 @@
 package com.losgai.ai.util;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 

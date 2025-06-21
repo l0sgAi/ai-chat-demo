@@ -1,7 +1,7 @@
-package com.losgai.ai.service;
+package com.losgai.ai.service.ai;
 
 
-import com.losgai.ai.entity.AiMessagePair;
+import com.losgai.ai.entity.ai.AiMessagePair;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.losgai.ai.mapper;
 
-import com.losgai.ai.entity.AiSession;
+import com.losgai.ai.entity.ai.AiSession;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -10,7 +10,6 @@ import java.util.List;
 * @author Losgai
 * &#064;description  针对表【ai_session(AI会话记录表)】的数据库操作Mapper
 * @since  2025-06-01 12:17:12
-* &#064;Entity  generator.entity.AiSession
  */
 @Mapper
 public interface AiSessionMapper {

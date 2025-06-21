@@ -4,8 +4,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.losgai.ai.aiservice.Assistant;
-import com.losgai.ai.entity.AiConfig;
-import com.losgai.ai.mapper.AiConfigMapper;
+import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.util.OpenAiModelBuilder;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
@@ -22,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;

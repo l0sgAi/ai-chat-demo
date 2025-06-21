@@ -1,8 +1,8 @@
-package com.losgai.ai.service.impl;
+package com.losgai.ai.service.ai.impl;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.global.ChatSession;
-import com.losgai.ai.service.AiChatMessageService;
+import com.losgai.ai.service.ai.AiChatMessageService;
 import com.losgai.ai.util.OpenAiModelBuilder;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.springframework.stereotype.Service;

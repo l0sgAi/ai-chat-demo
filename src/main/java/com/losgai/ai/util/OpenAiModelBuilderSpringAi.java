@@ -1,6 +1,6 @@
 package com.losgai.ai.util;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;

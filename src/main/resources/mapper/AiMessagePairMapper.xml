@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.losgai.ai.mapper.AiMessagePairMapper">
 
-    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.AiMessagePair">
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.ai.AiMessagePair">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="sessionId" column="session_id" jdbcType="BIGINT"/>
             <result property="sseSessionId" column="sse_session_id" jdbcType="VARCHAR"/>
@@ -35,7 +35,7 @@
         delete from ai_message_pair
         where  id = #{id,jdbcType=BIGINT} 
     </delete>
-    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiMessagePair" useGeneratedKeys="true">
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.AiMessagePair" useGeneratedKeys="true">
         insert into ai_message_pair
         ( id,session_id,sse_session_id
         ,user_content,ai_content,model_used
@@ -46,7 +46,7 @@
         ,#{status,jdbcType=TINYINT},#{tokens,jdbcType=INTEGER},#{createTime,jdbcType=TIMESTAMP}
         ,#{responseTime,jdbcType=TIMESTAMP})
     </insert>
-    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiMessagePair" useGeneratedKeys="true">
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.AiMessagePair" useGeneratedKeys="true">
         insert into ai_message_pair
         <trim prefix="(" suffix=")" suffixOverrides=",">
                 <if test="id != null">id,</if>
@@ -73,7 +73,7 @@
                 <if test="responseTime != null">#{responseTime,jdbcType=TIMESTAMP},</if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.AiMessagePair">
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.ai.AiMessagePair">
         update ai_message_pair
         <set>
                 <if test="sessionId != null">
@@ -106,7 +106,7 @@
         </set>
         where   id = #{id,jdbcType=BIGINT} 
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.AiMessagePair">
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.ai.AiMessagePair">
         update ai_message_pair
         set 
             session_id =  #{sessionId,jdbcType=BIGINT},
@@ -149,7 +149,7 @@
         where sse_session_id = #{sseSessionId,jdbcType=VARCHAR}
     </update>
 
-    <select id="selectBySessionId" resultType="com.losgai.ai.entity.AiMessagePair">
+    <select id="selectBySessionId" resultType="com.losgai.ai.entity.ai.AiMessagePair">
         select
         <include refid="Base_Column_List" />
         from ai_message_pair

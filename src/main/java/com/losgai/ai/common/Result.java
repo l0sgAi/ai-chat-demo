@@ -1,5 +1,6 @@
 package com.losgai.ai.common;
 
+import com.losgai.ai.enums.ResultCodeEnum;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,7 +16,7 @@ public class Result<T> {
 
     public static <T> Result<T> success(T data) {
         Result<T> result = new Result<>();
-        result.setCode(0);
+        result.setCode(ResultCodeEnum.SUCCESS.getCode());
         result.setMessage("操作成功");
         result.setData(data);
         return result;
@@ -23,14 +24,14 @@ public class Result<T> {
 
     public static <T> Result<T> error(String message) {
         Result<T> result = new Result<>();
-        result.setCode(500);
+        result.setCode(ResultCodeEnum.SERVICE_ERROR.getCode());
         result.setMessage(message);
         return result;
     }
     // 新增分页返回方法
     public static <T> Result<T> page(T data, long count) {
         Result<T> result = new Result<>();
-        result.setCode(0);
+        result.setCode(ResultCodeEnum.SUCCESS.getCode());
         result.setMessage("分页返回");
         result.setData(data);
         result.setCount(count);

@@ -1,4 +1,4 @@
-package com.losgai.ai.service;
+package com.losgai.ai.service.ai;
 
 import com.losgai.ai.dto.AiChatParamDTO;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;

@@ -1,6 +1,6 @@
 package com.losgai.ai;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.mapper.AiConfigMapper;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;

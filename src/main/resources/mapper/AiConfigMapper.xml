@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.losgai.ai.mapper.AiConfigMapper">
 
-    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.AiConfig">
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.ai.AiConfig">
         <id property="id" column="id" jdbcType="INTEGER"/>
         <result property="displayName" column="display_name" jdbcType="VARCHAR"/>
         <result property="apiDomain" column="api_domain" jdbcType="VARCHAR"/>
@@ -45,7 +45,7 @@
         from ai_config
         where id = #{id,jdbcType=INTEGER}
     </delete>
-    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiConfig"
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.AiConfig"
             useGeneratedKeys="true">
         insert into ai_config
         ( id, display_name, api_domain
@@ -62,7 +62,7 @@
                , #{caseBrief,jdbcType=VARCHAR}, #{caseRemark,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}
                , #{updateTime,jdbcType=TIMESTAMP})
     </insert>
-    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.AiConfig"
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.AiConfig"
             useGeneratedKeys="true">
         insert into ai_config
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -104,7 +104,7 @@
             <if test="updateTime != null">#{updateTime,jdbcType=TIMESTAMP},</if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.AiConfig">
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.ai.AiConfig">
         update ai_config
         <set>
             <if test="displayName != null">
@@ -174,7 +174,7 @@
         </set>
         where id = #{id,jdbcType=INTEGER}
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.AiConfig">
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.ai.AiConfig">
         update ai_config
         set display_name     = #{displayName,jdbcType=VARCHAR},
             api_domain       = #{apiDomain,jdbcType=VARCHAR},

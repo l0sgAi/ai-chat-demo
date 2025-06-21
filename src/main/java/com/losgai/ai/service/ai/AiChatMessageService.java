@@ -1,6 +1,6 @@
-package com.losgai.ai.service;
+package com.losgai.ai.service.ai;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.global.ChatSession;
 
 public interface AiChatMessageService {

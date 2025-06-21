@@ -1,9 +1,9 @@
-package com.losgai.ai.service.impl;
+package com.losgai.ai.service.ai.impl;
 
-import com.losgai.ai.entity.AiSession;
+import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
-import com.losgai.ai.service.AiChatSessionService;
+import com.losgai.ai.service.ai.AiChatSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

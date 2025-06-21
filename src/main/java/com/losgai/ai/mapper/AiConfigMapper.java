@@ -1,6 +1,6 @@
 package com.losgai.ai.mapper;
 
-import com.losgai.ai.entity.AiConfig;
+import com.losgai.ai.entity.ai.AiConfig;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

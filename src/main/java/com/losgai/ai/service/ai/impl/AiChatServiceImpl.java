@@ -1,15 +1,15 @@
-package com.losgai.ai.service.impl;
+package com.losgai.ai.service.ai.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.losgai.ai.dto.AiChatParamDTO;
-import com.losgai.ai.entity.AiConfig;
-import com.losgai.ai.entity.AiMessagePair;
+import com.losgai.ai.entity.ai.AiConfig;
+import com.losgai.ai.entity.ai.AiMessagePair;
 import com.losgai.ai.enums.AiMessageStatusEnum;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
-import com.losgai.ai.service.AiChatService;
-import com.losgai.ai.service.AiChatMessageService;
+import com.losgai.ai.service.ai.AiChatService;
+import com.losgai.ai.service.ai.AiChatMessageService;
 import com.losgai.ai.util.OpenAiModelBuilderSpringAi;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

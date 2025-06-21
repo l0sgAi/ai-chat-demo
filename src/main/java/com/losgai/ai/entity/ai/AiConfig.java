@@ -1,4 +1,4 @@
-package com.losgai.ai.entity;
+package com.losgai.ai.entity.ai;
 
 import lombok.Data;
 

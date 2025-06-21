@@ -1,6 +1,6 @@
 package com.losgai.ai.mapper;
 
-import com.losgai.ai.entity.AiMessagePair;
+import com.losgai.ai.entity.ai.AiMessagePair;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
