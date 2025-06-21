@@ -1,5 +1,6 @@
 # 查询你的文本向量
-GET /games/_search # games换成你的索引名称
+# games换成你的索引名称
+GET /games/_search
 {
   "query": {
     "match_all": {}
