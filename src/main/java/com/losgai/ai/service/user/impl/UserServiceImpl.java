@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -69,5 +70,56 @@ public class UserServiceImpl implements UserService {
         // 第1步，先登录上
         StpUtil.login(user.getId(), false);
         return ResultCodeEnum.SUCCESS;
+    }
+
+    @Override
+    @Description("新增学生信息")
+    public ResultCodeEnum addStudent(User user) {
+        // 1.判断对应用户是否存在，防止重复注册
+        String email = user.getEmail(); // 对于学生来说是学号
+        String userPhone = user.getPhone();
+        if (userMapper.existsByUsername(email, userPhone) >= 1) {
+            return ResultCodeEnum.USER_NAME_IS_EXISTS;
+        }
+        // 2.插入用户数据
+        user.setStatus(1);
+        user.setRole(0L);
+        user.setDeleted(0);
+        // 默认密码，学号+姓名
+        user.setPassword(SaSecureUtil.sha256(email + user.getUsername()));
+        user.setCreateTime(Date.from(Instant.now()));
+        user.setUpdateTime(Date.from(Instant.now()));
+        userMapper.insert(user);
+        return ResultCodeEnum.SUCCESS;
+    }
+
+    @Override
+    @Description("更新学生信息")
+    public ResultCodeEnum updateStudent(User user) {
+        // 密码加密储存
+        user.setPassword(SaSecureUtil.sha256(user.getPassword()));
+        // 更新更新时间
+        user.setUpdateTime(Date.from(Instant.now()));
+        int i = userMapper.updateByPrimaryKeySelective(user);
+        if (i < 1) {
+            return ResultCodeEnum.DATA_ERROR;
+        }
+        return ResultCodeEnum.SUCCESS;
+    }
+
+    @Override
+    @Description("删除学生信息")
+    public ResultCodeEnum delete(Long id) {
+        int i = userMapper.deleteByPrimaryKey(id);
+        if (i < 1) {
+            return ResultCodeEnum.DATA_ERROR;
+        }
+        return ResultCodeEnum.SUCCESS;
+    }
+
+    @Override
+    @Description("查询学生信息")
+    public List<User> queryByKeyWord(String keyWord) {
+        return userMapper.queryByKeyWord(keyWord);
     }
 }

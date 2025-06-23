@@ -40,6 +40,7 @@
         <hutool.version>5.8.38</hutool.version>
         <swagger.version>2.2.31</swagger.version>
         <springboot.version>3.5.0</springboot.version>
+        <pagehelper.version>6.1.1</pagehelper.version>
     </properties>
 
     <dependencies>
@@ -184,6 +185,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
             <version>${springboot.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.github.pagehelper/pagehelper -->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper</artifactId>
+            <version>${pagehelper.version}</version>
         </dependency>
 
     </dependencies>

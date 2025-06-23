@@ -53,10 +53,21 @@
         or email = #{email,jdbcType=VARCHAR}))
     </select>
 
-    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
-        delete from user
-        where  id = #{id,jdbcType=BIGINT} 
-    </delete>
+    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.user.User">
+        select
+        <include refid="Base_Column_List" />
+        from user
+        where deleted = 0
+        and (phone like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
+        or email like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
+        or username like concat('%',#{keyWord,jdbcType=VARCHAR},'%'))
+    </select>
+
+    <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        update user
+        set deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
 
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.user.User" useGeneratedKeys="true">
         insert into user
@@ -149,7 +160,8 @@
                     deleted = #{deleted,jdbcType=TINYINT},
                 </if>
         </set>
-        where   id = #{id,jdbcType=BIGINT} 
+        where  id = #{id,jdbcType=BIGINT}
+        and deleted = 0
     </update>
     <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.user.User">
         update user

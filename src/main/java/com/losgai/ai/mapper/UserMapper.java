@@ -4,6 +4,8 @@ import com.losgai.ai.entity.user.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * @author Losgai
  * @description 针对表【user(用户信息表)】的数据库操作Mapper
@@ -36,4 +38,5 @@ public interface UserMapper {
     int existsByUsername(@Param("email") String email,
                          @Param("userPhone") String userPhone);
 
+    List<User> queryByKeyWord(String keyWord);
 }

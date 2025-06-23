@@ -51,7 +51,6 @@ public class UserController {
         return Result.error(resultCodeEnum.getMessage());
     }
 
-    // 当前应用独自注销 (不退出其它应用)
     @RequestMapping("/doLogout")
     @Tag(name = "用户注销", description = "单端独立注销")
     public Result<String> logoutByAlone() {
