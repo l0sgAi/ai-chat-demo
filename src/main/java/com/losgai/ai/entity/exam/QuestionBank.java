@@ -46,7 +46,7 @@ public class QuestionBank implements Serializable {
     */
     private String answer;
     /**
-    * 正确答案-选项 abcd对应0123 正确/错误 对应 0/1
+    * 正确答案-选项 ABCD对应0123 正确/错误 对应 0/1
     */
     private Integer answerOption;
     /**

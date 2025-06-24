@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -22,6 +24,16 @@ public class QuestionBankServiceImpl implements QuestionBankService {
     @Override
     @Description("新增试题信息")
     public ResultCodeEnum add(QuestionBank questionBank) {
+        questionBank.setCreatedTime(Date.from(Instant.now()));
+        questionBank.setUpdatedTime(Date.from(Instant.now()));
+        questionBank.setDeleted(0);
+        if(questionBank.getType() == 2){
+            // 简答题
+            questionBank.setAnswerOption(-1);
+        }else {
+            // 选择判断题
+            questionBank.setAnswer("简答题");
+        }
         questionBankMapper.insert(questionBank);
         return ResultCodeEnum.SUCCESS;
     }
@@ -29,6 +41,14 @@ public class QuestionBankServiceImpl implements QuestionBankService {
     @Override
     @Description("更新试题信息")
     public ResultCodeEnum update(QuestionBank questionBank) {
+        questionBank.setUpdatedTime(Date.from(Instant.now()));
+        if(questionBank.getType() == 2){
+            // 简答题
+            questionBank.setAnswerOption(-1);
+        }else {
+            // 选择判断题
+            questionBank.setAnswer("简答题");
+        }
         questionBankMapper.updateByPrimaryKeySelective(questionBank);
         return ResultCodeEnum.SUCCESS;
     }

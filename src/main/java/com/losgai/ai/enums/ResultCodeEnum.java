@@ -13,6 +13,7 @@ public enum ResultCodeEnum {
     USER_NAME_IS_EXISTS(209 , "该学号已经存在"),
     SYSTEM_ERROR(9999 , "您的网络有问题请稍后重试"),
     DATA_ERROR(204, "数据异常"),
+    TIMING_ERROR(206, "不合法状态"),
     NO_USER(205, "不是合法用户"),
     ACCOUNT_STOP( 216, "账号已停用");
 

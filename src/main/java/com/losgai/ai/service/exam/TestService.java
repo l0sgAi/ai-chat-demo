@@ -1,0 +1,19 @@
+package com.losgai.ai.service.exam;
+
+import com.losgai.ai.entity.exam.Test;
+import com.losgai.ai.entity.exam.TestResult;
+import com.losgai.ai.enums.ResultCodeEnum;
+
+import java.util.List;
+
+public interface TestService {
+
+
+    ResultCodeEnum add(Test test);
+
+    ResultCodeEnum update(Test test);
+
+    ResultCodeEnum delete(Long id);
+
+    List<Test> queryByKeyWord(String keyWord,Integer status);
+}

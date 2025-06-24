@@ -2,11 +2,11 @@ package com.losgai.ai.common;// GlobalExceptionHandler.java
 
 import com.losgai.ai.enums.ErrorCode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-@ControllerAdvice
+@RestControllerAdvice  // 自动为所有方法添加 @ResponseBody
 @Slf4j
 public class GlobalExceptionHandler {
 

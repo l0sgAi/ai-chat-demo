@@ -33,12 +33,14 @@
         and deleted = 0
     </select>
 
-    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.exam.QuestionBank">
-        select
+    <select id="queryByKeyWord" resultMap="BaseResultMap">
+        SELECT
         <include refid="Base_Column_List" />
-        from question_bank
-        where title like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
-        and deleted = 0
+        FROM question_bank
+        WHERE deleted = 0
+        <if test="keyWord != null and keyWord.trim() != ''">
+            AND title LIKE CONCAT('%', #{keyWord,jdbcType=VARCHAR}, '%')
+        </if>
     </select>
 
     <update id="deleteByPrimaryKey" parameterType="java.lang.Long">

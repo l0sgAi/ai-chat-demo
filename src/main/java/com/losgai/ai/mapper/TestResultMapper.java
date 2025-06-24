@@ -1,6 +1,9 @@
 package com.losgai.ai.mapper;
 
 import com.losgai.ai.entity.exam.TestResult;
+import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 /**
 * @author Losgai
@@ -8,6 +11,7 @@ import com.losgai.ai.entity.exam.TestResult;
 * @createDate 2025-06-24 11:24:27
 * @Entity com.losgai.ai.entity.user.TestResult
 */
+@Mapper
 public interface TestResultMapper {
 
     int deleteByPrimaryKey(Long id);
@@ -22,4 +26,5 @@ public interface TestResultMapper {
 
     int updateByPrimaryKey(TestResult record);
 
+    List<TestResult> queryByKeyWord(String keyWord);
 }

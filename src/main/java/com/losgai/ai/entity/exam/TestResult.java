@@ -22,6 +22,10 @@ public class TestResult implements Serializable {
      */
     private Long userId;
     /**
+     * 考试ID
+     * */
+    private Long testId;
+    /**
      * 考试结果报告内容-html格式
      */
     private String content;

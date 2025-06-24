@@ -7,6 +7,7 @@
     <resultMap id="BaseResultMap" type="com.losgai.ai.entity.exam.TestResult">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="testId" column="test_id" jdbcType="BIGINT"/>
             <result property="content" column="content" jdbcType="VARCHAR"/>
             <result property="timeUsed" column="time_used" jdbcType="INTEGER"/>
             <result property="score" column="score" jdbcType="INTEGER"/>
@@ -15,7 +16,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,user_id,content,
+        id,user_id,test_id,content,
         time_used,score,created_time,
         deleted
     </sql>
@@ -26,6 +27,15 @@
         from test_result
         where  id = #{id,jdbcType=BIGINT} 
     </select>
+    <select id="queryByKeyWord" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM test_result tr
+        WHERE deleted = 0
+        <if test="keyWord != null and keyWord.trim() != ''">
+            AND title LIKE CONCAT('%', #{keyWord,jdbcType=VARCHAR}, '%')
+        </if>
+    </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
         delete from test_result
@@ -33,10 +43,10 @@
     </delete>
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.TestResult" useGeneratedKeys="true">
         insert into test_result
-        ( id,user_id,content
+        ( id,user_id,test_id,content
         ,time_used,score,created_time
         ,deleted)
-        values (#{id,jdbcType=BIGINT},#{userId,jdbcType=BIGINT},#{content,jdbcType=VARCHAR}
+        values (#{id,jdbcType=BIGINT},#{userId,jdbcType=BIGINT},#{testId,jdbcType=BIGINT},#{content,jdbcType=VARCHAR}
         ,#{timeUsed,jdbcType=INTEGER},#{score,jdbcType=INTEGER},#{createdTime,jdbcType=TIMESTAMP}
         ,#{deleted,jdbcType=TINYINT})
     </insert>
@@ -45,6 +55,7 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
                 <if test="id != null">id,</if>
                 <if test="userId != null">user_id,</if>
+                <if test="testId != null">test_id,</if>
                 <if test="content != null">content,</if>
                 <if test="timeUsed != null">time_used,</if>
                 <if test="score != null">score,</if>
@@ -54,6 +65,7 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
                 <if test="id != null">#{id,jdbcType=BIGINT},</if>
                 <if test="userId != null">#{userId,jdbcType=BIGINT},</if>
+                <if test="testId != null">#{testId,jdbcType=BIGINT},</if>
                 <if test="content != null">#{content,jdbcType=VARCHAR},</if>
                 <if test="timeUsed != null">#{timeUsed,jdbcType=INTEGER},</if>
                 <if test="score != null">#{score,jdbcType=INTEGER},</if>
@@ -66,6 +78,9 @@
         <set>
                 <if test="userId != null">
                     user_id = #{userId,jdbcType=BIGINT},
+                </if>
+                <if test="testId != null">
+                    test_id = #{testId,jdbcType=BIGINT},
                 </if>
                 <if test="content != null">
                     content = #{content,jdbcType=VARCHAR},
@@ -89,6 +104,7 @@
         update test_result
         set 
             user_id =  #{userId,jdbcType=BIGINT},
+            test_id =  #{testId,jdbcType=BIGINT},
             content =  #{content,jdbcType=VARCHAR},
             time_used =  #{timeUsed,jdbcType=INTEGER},
             score =  #{score,jdbcType=INTEGER},
