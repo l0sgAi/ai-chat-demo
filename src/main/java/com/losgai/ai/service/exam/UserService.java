@@ -1,7 +1,7 @@
-package com.losgai.ai.service.user;
+package com.losgai.ai.service.exam;
 
 import com.losgai.ai.dto.LoginDto;
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
 
 import java.util.List;

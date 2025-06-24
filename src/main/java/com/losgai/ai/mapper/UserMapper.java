@@ -1,6 +1,6 @@
 package com.losgai.ai.mapper;
 
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.exam.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -10,7 +10,6 @@ import java.util.List;
  * @author Losgai
  * @description 针对表【user(用户信息表)】的数据库操作Mapper
  * @createDate 2025-06-21 16:25:37
- * @Entity generator.entity.User
  */
 @Mapper
 public interface UserMapper {

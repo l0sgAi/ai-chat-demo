@@ -21,7 +21,6 @@ public class GlobalExceptionHandler {
     public Result<Void> handleUnexpectedException(Exception ex) {
         Result<Void> errorResult = Result.error("系统内部错误");
         errorResult.setCode(ErrorCode.INTERNAL_SERVER_ERROR.getCode());
-        // 可以选择打印日志
         log.error("[全局异常捕获] 未知异常", ex);
         return errorResult;
     }

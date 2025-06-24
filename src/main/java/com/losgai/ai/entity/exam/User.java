@@ -1,4 +1,4 @@
-package com.losgai.ai.entity.user;
+package com.losgai.ai.entity.exam;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

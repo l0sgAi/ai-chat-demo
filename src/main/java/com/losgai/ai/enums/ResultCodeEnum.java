@@ -10,14 +10,11 @@ public enum ResultCodeEnum {
     LOGIN_ERROR(201 , "用户名或者密码错误"),
     VALIDATE_CODE_ERROR(202 , "验证码错误") ,
     LOGIN_AUTH(208 , "用户未登录"),
-    USER_NAME_IS_EXISTS(209 , "邮箱/手机号已经存在"),
+    USER_NAME_IS_EXISTS(209 , "该学号已经存在"),
     SYSTEM_ERROR(9999 , "您的网络有问题请稍后重试"),
     DATA_ERROR(204, "数据异常"),
     NO_USER(205, "不是合法用户"),
-    ACCOUNT_STOP( 216, "账号已停用"),
-
-
-    ;
+    ACCOUNT_STOP( 216, "账号已停用");
 
     private Integer code ;      // 业务状态码
     private String message ;    // 响应消息

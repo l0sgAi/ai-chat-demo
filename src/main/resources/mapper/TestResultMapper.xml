@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.losgai.ai.mapper.TestResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.exam.TestResult">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="timeUsed" column="time_used" jdbcType="INTEGER"/>
+            <result property="score" column="score" jdbcType="INTEGER"/>
+            <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
+            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,content,
+        time_used,score,created_time,
+        deleted
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from test_result
+        where  id = #{id,jdbcType=BIGINT} 
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from test_result
+        where  id = #{id,jdbcType=BIGINT} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.TestResult" useGeneratedKeys="true">
+        insert into test_result
+        ( id,user_id,content
+        ,time_used,score,created_time
+        ,deleted)
+        values (#{id,jdbcType=BIGINT},#{userId,jdbcType=BIGINT},#{content,jdbcType=VARCHAR}
+        ,#{timeUsed,jdbcType=INTEGER},#{score,jdbcType=INTEGER},#{createdTime,jdbcType=TIMESTAMP}
+        ,#{deleted,jdbcType=TINYINT})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.TestResult" useGeneratedKeys="true">
+        insert into test_result
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="userId != null">user_id,</if>
+                <if test="content != null">content,</if>
+                <if test="timeUsed != null">time_used,</if>
+                <if test="score != null">score,</if>
+                <if test="createdTime != null">created_time,</if>
+                <if test="deleted != null">deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id,jdbcType=BIGINT},</if>
+                <if test="userId != null">#{userId,jdbcType=BIGINT},</if>
+                <if test="content != null">#{content,jdbcType=VARCHAR},</if>
+                <if test="timeUsed != null">#{timeUsed,jdbcType=INTEGER},</if>
+                <if test="score != null">#{score,jdbcType=INTEGER},</if>
+                <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+                <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.exam.TestResult">
+        update test_result
+        <set>
+                <if test="userId != null">
+                    user_id = #{userId,jdbcType=BIGINT},
+                </if>
+                <if test="content != null">
+                    content = #{content,jdbcType=VARCHAR},
+                </if>
+                <if test="timeUsed != null">
+                    time_used = #{timeUsed,jdbcType=INTEGER},
+                </if>
+                <if test="score != null">
+                    score = #{score,jdbcType=INTEGER},
+                </if>
+                <if test="createdTime != null">
+                    created_time = #{createdTime,jdbcType=TIMESTAMP},
+                </if>
+                <if test="deleted != null">
+                    deleted = #{deleted,jdbcType=TINYINT},
+                </if>
+        </set>
+        where   id = #{id,jdbcType=BIGINT} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.exam.TestResult">
+        update test_result
+        set 
+            user_id =  #{userId,jdbcType=BIGINT},
+            content =  #{content,jdbcType=VARCHAR},
+            time_used =  #{timeUsed,jdbcType=INTEGER},
+            score =  #{score,jdbcType=INTEGER},
+            created_time =  #{createdTime,jdbcType=TIMESTAMP},
+            deleted =  #{deleted,jdbcType=TINYINT}
+        where   id = #{id,jdbcType=BIGINT} 
+    </update>
+</mapper>

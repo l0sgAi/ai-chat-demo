@@ -4,16 +4,13 @@ import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import com.losgai.ai.common.Result;
 import com.losgai.ai.dto.LoginDto;
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.service.user.UserService;
+import com.losgai.ai.service.exam.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
@@ -51,11 +48,22 @@ public class UserController {
         return Result.error(resultCodeEnum.getMessage());
     }
 
-    @RequestMapping("/doLogout")
+    @PostMapping("/doLogout")
     @Tag(name = "用户注销", description = "单端独立注销")
     public Result<String> logoutByAlone() {
         StpUtil.logout();
         return Result.success("注销成功");
+    }
+
+    @GetMapping("/getUserInfo")
+    @Tag(name = "获取用户信息", description = "获取当前登录用户信息")
+    public Result<User> getUserInfo() {
+        if(StpUtil.isLogin()){ // 判断是否登录
+            // 从Session中获取用 户信息（如果登录时已保存）
+            User user = (User) StpUtil.getSession().get("user");
+            return Result.success(user);
+        }
+        return Result.error("用户未登录");
     }
 
 }

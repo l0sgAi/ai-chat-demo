@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.losgai.ai.mapper.UserMapper">
 
-    <resultMap id="BaseResultMap" type="generator.entity.User">
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.exam.User">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="username" column="username" jdbcType="VARCHAR"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
@@ -36,7 +36,7 @@
         where  id = #{id,jdbcType=BIGINT} 
     </select>
 
-    <select id="selectByUsername" resultType="com.losgai.ai.entity.user.User">
+    <select id="selectByUsername" resultType="com.losgai.ai.entity.exam.User">
         select
         <include refid="Base_Column_List" />
         from user
@@ -53,11 +53,12 @@
         or email = #{email,jdbcType=VARCHAR}))
     </select>
 
-    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.user.User">
+    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.exam.User">
         select
         <include refid="Base_Column_List" />
         from user
         where deleted = 0
+        and role = 0
         and (phone like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
         or email like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
         or username like concat('%',#{keyWord,jdbcType=VARCHAR},'%'))
@@ -69,7 +70,7 @@
         where id = #{id,jdbcType=BIGINT}
     </update>
 
-    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.user.User" useGeneratedKeys="true">
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.User" useGeneratedKeys="true">
         insert into user
         ( id,username,password
         ,email,phone,nickname
@@ -82,7 +83,7 @@
         ,#{status,jdbcType=TINYINT},#{role,jdbcType=BIGINT},#{createTime,jdbcType=TIMESTAMP}
         ,#{updateTime,jdbcType=TIMESTAMP},#{deleted,jdbcType=TINYINT})
     </insert>
-    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.user.User" useGeneratedKeys="true">
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.User" useGeneratedKeys="true">
         insert into user
         <trim prefix="(" suffix=")" suffixOverrides=",">
                 <if test="id != null">id,</if>
@@ -117,7 +118,7 @@
                 <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.user.User">
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.exam.User">
         update user
         <set>
                 <if test="username != null">
@@ -163,7 +164,7 @@
         where  id = #{id,jdbcType=BIGINT}
         and deleted = 0
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.user.User">
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.exam.User">
         update user
         set 
             username =  #{username,jdbcType=VARCHAR},

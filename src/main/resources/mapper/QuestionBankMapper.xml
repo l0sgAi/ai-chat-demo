@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.losgai.ai.mapper.QuestionBankMapper">
+
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.exam.QuestionBank">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="INTEGER"/>
+            <result property="level" column="level" jdbcType="INTEGER"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="answer" column="answer" jdbcType="VARCHAR"/>
+            <result property="answerOption" column="answer_option" jdbcType="INTEGER"/>
+            <result property="explanation" column="explanation" jdbcType="VARCHAR"/>
+            <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
+            <result property="updatedTime" column="updated_time" jdbcType="TIMESTAMP"/>
+            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,type,
+        level,content,answer,
+        answer_option,explanation,created_time,
+        updated_time,deleted
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from question_bank
+        where  id = #{id,jdbcType=BIGINT}
+        and deleted = 0
+    </select>
+
+    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.exam.QuestionBank">
+        select
+        <include refid="Base_Column_List" />
+        from question_bank
+        where title like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
+        and deleted = 0
+    </select>
+
+    <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        update question_bank set deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.QuestionBank" useGeneratedKeys="true">
+        insert into question_bank
+        ( id,title,type
+        ,level,content,answer
+        ,answer_option,explanation,created_time
+        ,updated_time,deleted)
+        values (#{id,jdbcType=BIGINT},#{title,jdbcType=VARCHAR},#{type,jdbcType=INTEGER}
+        ,#{level,jdbcType=INTEGER},#{content,jdbcType=VARCHAR},#{answer,jdbcType=VARCHAR}
+        ,#{answerOption,jdbcType=INTEGER},#{explanation,jdbcType=VARCHAR},#{createdTime,jdbcType=TIMESTAMP}
+        ,#{updatedTime,jdbcType=TIMESTAMP},#{deleted,jdbcType=TINYINT})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.QuestionBank" useGeneratedKeys="true">
+        insert into question_bank
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="title != null">title,</if>
+                <if test="type != null">type,</if>
+                <if test="level != null">level,</if>
+                <if test="content != null">content,</if>
+                <if test="answer != null">answer,</if>
+                <if test="answerOption != null">answer_option,</if>
+                <if test="explanation != null">explanation,</if>
+                <if test="createdTime != null">created_time,</if>
+                <if test="updatedTime != null">updated_time,</if>
+                <if test="deleted != null">deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id,jdbcType=BIGINT},</if>
+                <if test="title != null">#{title,jdbcType=VARCHAR},</if>
+                <if test="type != null">#{type,jdbcType=INTEGER},</if>
+                <if test="level != null">#{level,jdbcType=INTEGER},</if>
+                <if test="content != null">#{content,jdbcType=VARCHAR},</if>
+                <if test="answer != null">#{answer,jdbcType=VARCHAR},</if>
+                <if test="answerOption != null">#{answerOption,jdbcType=INTEGER},</if>
+                <if test="explanation != null">#{explanation,jdbcType=VARCHAR},</if>
+                <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+                <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+                <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.exam.QuestionBank">
+        update question_bank
+        <set>
+                <if test="title != null">
+                    title = #{title,jdbcType=VARCHAR},
+                </if>
+                <if test="type != null">
+                    type = #{type,jdbcType=INTEGER},
+                </if>
+                <if test="level != null">
+                    level = #{level,jdbcType=INTEGER},
+                </if>
+                <if test="content != null">
+                    content = #{content,jdbcType=VARCHAR},
+                </if>
+                <if test="answer != null">
+                    answer = #{answer,jdbcType=VARCHAR},
+                </if>
+                <if test="answerOption != null">
+                    answer_option = #{answerOption,jdbcType=INTEGER},
+                </if>
+                <if test="explanation != null">
+                    explanation = #{explanation,jdbcType=VARCHAR},
+                </if>
+                <if test="createdTime != null">
+                    created_time = #{createdTime,jdbcType=TIMESTAMP},
+                </if>
+                <if test="updatedTime != null">
+                    updated_time = #{updatedTime,jdbcType=TIMESTAMP},
+                </if>
+                <if test="deleted != null">
+                    deleted = #{deleted,jdbcType=TINYINT},
+                </if>
+        </set>
+        where   id = #{id,jdbcType=BIGINT} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.exam.QuestionBank">
+        update question_bank
+        set title         = #{title,jdbcType=VARCHAR},
+            type          = #{type,jdbcType=INTEGER},
+            level         = #{level,jdbcType=INTEGER},
+            content       = #{content,jdbcType=VARCHAR},
+            answer        = #{answer,jdbcType=VARCHAR},
+            answer_option = #{answerOption,jdbcType=INTEGER},
+            explanation   = #{explanation,jdbcType=VARCHAR},
+            created_time  = #{createdTime,jdbcType=TIMESTAMP},
+            updated_time  = #{updatedTime,jdbcType=TIMESTAMP},
+            deleted       = #{deleted,jdbcType=TINYINT}
+        where id = #{id,jdbcType=BIGINT}
+          and deleted = 0
+    </update>
+</mapper>

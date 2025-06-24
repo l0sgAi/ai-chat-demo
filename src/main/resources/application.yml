@@ -34,6 +34,12 @@ sa-token:
   # 是否输出操作日志
   is-log: true
 
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
 

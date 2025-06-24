@@ -1,13 +1,13 @@
-package com.losgai.ai.service.user.impl;
+package com.losgai.ai.service.exam.impl;
 
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.losgai.ai.dto.LoginDto;
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.mapper.UserMapper;
-import com.losgai.ai.service.user.UserService;
+import com.losgai.ai.service.exam.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Description;
@@ -43,6 +43,8 @@ public class UserServiceImpl implements UserService {
         if (user.getPassword().equals(encryptedPwd)) {
             // 第1步，先登录上
             StpUtil.login(user.getId(), loginDto.getRememberMe());
+            // 保存用户完整信息到 Session 中
+            StpUtil.getSession().set("user", user);
             return ResultCodeEnum.SUCCESS;
         }
         // TODO 目前验证码直接在前端验证，后续再实现
@@ -69,6 +71,8 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
         // 第1步，先登录上
         StpUtil.login(user.getId(), false);
+        // 保存用户完整信息到 Session 中
+        StpUtil.getSession().set("user", user);
         return ResultCodeEnum.SUCCESS;
     }
 
