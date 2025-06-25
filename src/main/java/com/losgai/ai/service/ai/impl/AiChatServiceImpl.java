@@ -321,6 +321,22 @@ public class AiChatServiceImpl implements AiChatService {
     }
 
     /**
+     * 根据提示词简单地，同步返回结果字符串，异步虚拟线程方法
+     *
+     * @param sysText    系统提示词
+     * @param userText   用户提示词
+     * @param assistText 辅助提示词
+     */
+    @Override
+    public CompletableFuture<String> simpleSendQuestion(String sysText, String userText, String assistText) {
+        return CompletableFuture.supplyAsync(() -> {
+            AiConfig aiConfig = aiConfigMapper.selectDefaultTextModel();
+            ChatResponse chatResponse = OpenAiModelBuilderSpringAi.buildModelNoStream(aiConfig, sysText, userText, assistText);
+            return chatResponse.getResult().getOutput().getText();
+        }, Executors.newVirtualThreadPerTaskExecutor());  // 使用虚拟线程
+    }
+
+    /**
      * ai回答推流sse
      */
     @Override

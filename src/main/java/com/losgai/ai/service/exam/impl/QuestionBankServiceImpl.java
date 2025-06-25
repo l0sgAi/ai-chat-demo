@@ -96,10 +96,20 @@ public class QuestionBankServiceImpl implements QuestionBankService {
             testResult.setDeleted(0);
             testResult.setScore(0);
             testResultMapper.insert(testResult);
+            // 清除list中的answer数据，防止通过控制台看到
+            list.forEach(item -> {
+                item.setAnswer("");
+                item.setAnswerOption(-1);
+            });
             return list;
         }
         String questionStr = result.getContent();
         // 解析成列表
-        return JSON.parseArray(questionStr, StudentQuestionDto.class);
+        List<StudentQuestionDto> list = JSON.parseArray(questionStr, StudentQuestionDto.class);
+        list.forEach(item -> {
+            item.setAnswer("");
+            item.setAnswerOption(-1);
+        });
+        return list;
     }
 }

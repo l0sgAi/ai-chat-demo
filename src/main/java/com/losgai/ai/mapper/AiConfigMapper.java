@@ -24,4 +24,6 @@ public interface AiConfigMapper {
 
     int updateByPrimaryKey(AiConfig record);
 
+    AiConfig selectDefaultTextModel();
+
 }

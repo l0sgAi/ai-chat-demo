@@ -131,7 +131,7 @@
                LIMIT 2)) AS all_questions
     </select>
 
-    <select id="selectByIds" resultType="com.losgai.ai.dto.StudentQuestionDto">
+    <select id="selectByIds" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
         from question_bank

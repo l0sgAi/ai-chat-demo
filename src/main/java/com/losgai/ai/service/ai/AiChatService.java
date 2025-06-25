@@ -24,6 +24,8 @@ public interface AiChatService {
      * 反应流处理流式对话
      * */
     CompletableFuture<Boolean> sendQuestionAsync(AiChatParamDTO aiChatParamDTO, String sessionId);
+
+    CompletableFuture<String> simpleSendQuestion(String sysText,String userText,String assistText);
     
 
     /** 获取流式返回结果*/
