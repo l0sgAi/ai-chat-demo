@@ -1,13 +1,11 @@
 package com.losgai.ai.controller.exam;
 
-import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.losgai.ai.common.Result;
 import com.losgai.ai.entity.exam.QuestionBank;
-import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.enums.SysRoleEnum;
 import com.losgai.ai.service.exam.QuestionBankService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +25,9 @@ public class QuestionBankController {
     private final QuestionBankService questionBankService;
 
     @PostMapping("/add")
+    @SaCheckRole("admin")
     @Tag(name = "新增题目", description = "管理员新增题目信息")
     public Result<String> add(@RequestBody QuestionBank questionBank) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = questionBankService.add(questionBank);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("新增题目信息成功");
@@ -39,13 +36,12 @@ public class QuestionBankController {
     }
 
     @GetMapping("/query")
+    @SaCheckRole("admin")
     @Tag(name = "查询题目", description = "管理员根据关键字分页查询题目信息")
     public Result<List<QuestionBank>> query(
             @RequestParam(required = false) String keyWord,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         // 开启分页
         PageHelper.startPage(pageNum, pageSize);
         // 执行查询
@@ -58,10 +54,9 @@ public class QuestionBankController {
 
 
     @PutMapping("/update")
+    @SaCheckRole("admin")
     @Tag(name = "编辑题目信息", description = "管理员编辑题目信息")
     public Result<String> update(@RequestBody QuestionBank questionBank) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = questionBankService.update(questionBank);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("编辑题目信息成功");
@@ -70,10 +65,9 @@ public class QuestionBankController {
     }
 
     @PutMapping("/delete")
+    @SaCheckRole("admin")
     @Tag(name = "逻辑删除题目信息", description = "管理员逻辑删除题目信息")
     public Result<String> delete(@RequestParam Long id) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = questionBankService.delete(id);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("删除题目信息成功");

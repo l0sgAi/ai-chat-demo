@@ -1,6 +1,5 @@
 package com.losgai.ai.service.exam;
 
-import com.losgai.ai.entity.exam.QuestionBank;
 import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
 

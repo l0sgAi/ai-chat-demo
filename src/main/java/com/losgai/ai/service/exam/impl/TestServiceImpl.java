@@ -62,6 +62,12 @@ public class TestServiceImpl implements TestService {
     @Override
     @Description("删除考试信息")
     public ResultCodeEnum delete(Long id) {
+        Test test = testMapper.selectByPrimaryKey(id);
+        Date now = Date.from(Instant.now());
+        // 不删除正在进行的考试
+        if (now.after(test.getStartTime()) && now.before(test.getEndTime())) {
+            return ResultCodeEnum.TIMING_ERROR;
+        }
         testMapper.deleteByPrimaryKey(id);
         return ResultCodeEnum.SUCCESS;
     }

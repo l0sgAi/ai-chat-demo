@@ -1,7 +1,6 @@
 package com.losgai.ai.service.exam;
 
 import com.losgai.ai.entity.exam.Test;
-import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
 
 import java.util.List;

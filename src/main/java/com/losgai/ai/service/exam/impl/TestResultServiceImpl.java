@@ -1,11 +1,8 @@
 package com.losgai.ai.service.exam.impl;
 
-import com.losgai.ai.entity.exam.QuestionBank;
 import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.mapper.QuestionBankMapper;
 import com.losgai.ai.mapper.TestResultMapper;
-import com.losgai.ai.service.exam.QuestionBankService;
 import com.losgai.ai.service.exam.TestResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +21,14 @@ public class TestResultServiceImpl implements TestResultService {
     @Override
     @Description("新增试题信息")
     public ResultCodeEnum add(TestResult testResult) {
+        testResultMapper.insert(testResult);
         return ResultCodeEnum.SUCCESS;
     }
 
     @Override
     @Description("更新试题信息")
     public ResultCodeEnum update(TestResult testResult) {
+        testResultMapper.updateByPrimaryKeySelective(testResult);
         return ResultCodeEnum.SUCCESS;
     }
 
@@ -41,7 +40,7 @@ public class TestResultServiceImpl implements TestResultService {
     }
 
     @Override
-    @Description("查询试题信息")
+    @Description("查询考试结果信息")
     public List<TestResult> queryByKeyWord(String keyWord) {
         return testResultMapper.queryByKeyWord(keyWord);
     }

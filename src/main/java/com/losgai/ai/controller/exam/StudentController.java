@@ -1,12 +1,11 @@
 package com.losgai.ai.controller.exam;
 
-import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.losgai.ai.common.Result;
 import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.enums.SysRoleEnum;
 import com.losgai.ai.service.exam.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +25,8 @@ public class StudentController {
 
     @PostMapping("/add")
     @Tag(name = "新增学生", description = "管理员新增学生信息")
+    @SaCheckRole("admin")
     public Result<String> add(@RequestBody User user) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = userService.addStudent(user);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("新增学生信息成功");
@@ -37,13 +35,12 @@ public class StudentController {
     }
 
     @GetMapping("/query")
+    @SaCheckRole("admin")
     @Tag(name = "查询学生", description = "管理员根据关键字分页查询学生信息")
     public Result<List<User>> query(
             @RequestParam(required = false) String keyWord,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         // 开启分页
         PageHelper.startPage(pageNum, pageSize);
         // 执行查询
@@ -56,10 +53,9 @@ public class StudentController {
 
 
     @PutMapping("/update")
+    @SaCheckRole("admin")
     @Tag(name = "编辑学生信息", description = "管理员编辑学生信息")
     public Result<String> update(@RequestBody User user) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = userService.updateStudent(user);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("编辑学生信息成功");
@@ -68,10 +64,9 @@ public class StudentController {
     }
 
     @PutMapping("/delete")
+    @SaCheckRole("admin")
     @Tag(name = "逻辑删除学生信息", description = "管理员逻辑删除学生信息")
     public Result<String> delete(@RequestParam Long id) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = userService.delete(id);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("删除学生信息成功");

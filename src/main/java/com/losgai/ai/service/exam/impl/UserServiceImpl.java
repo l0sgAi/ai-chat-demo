@@ -3,6 +3,8 @@ package com.losgai.ai.service.exam.impl;
 import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSONObject;
+import com.losgai.ai.dto.ChangePwdDto;
 import com.losgai.ai.dto.LoginDto;
 import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
@@ -125,5 +127,25 @@ public class UserServiceImpl implements UserService {
     @Description("查询学生信息")
     public List<User> queryByKeyWord(String keyWord) {
         return userMapper.queryByKeyWord(keyWord);
+    }
+
+    @Override
+    public ResultCodeEnum changePwd(ChangePwdDto changePwdDto) {
+        if (StpUtil.isLogin()) { // 判断是否登录
+            // 从Session中获取用 户信息（如果登录时已保存）
+            User userCur = ((JSONObject) StpUtil.getSession().get("user")).to(User.class);
+            String old = SaSecureUtil.sha256(changePwdDto.getOldPassword());
+            String newPwd = SaSecureUtil.sha256(changePwdDto.getNewPassword());
+            // 校验旧密码
+            if (userCur.getPassword().equals(old)) {
+                // 更新密码
+                userMapper.updatePwd(newPwd, userCur.getId());
+                // 保存用户完整信息到 Session 中
+                userCur.setPassword(newPwd);
+                StpUtil.getSession().set("user", userCur);
+                return ResultCodeEnum.SUCCESS;
+            }
+        }
+        return ResultCodeEnum.LOGIN_ERROR;
     }
 }

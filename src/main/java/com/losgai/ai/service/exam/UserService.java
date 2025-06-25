@@ -1,5 +1,6 @@
 package com.losgai.ai.service.exam;
 
+import com.losgai.ai.dto.ChangePwdDto;
 import com.losgai.ai.dto.LoginDto;
 import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
@@ -19,4 +20,9 @@ public interface UserService {
     ResultCodeEnum delete(Long id);
 
     List<User> queryByKeyWord(String keyWord);
+
+    /** 修改密码
+     * @param changePwdDto 传入的用户信息
+     * */
+    ResultCodeEnum changePwd(ChangePwdDto changePwdDto);
 }

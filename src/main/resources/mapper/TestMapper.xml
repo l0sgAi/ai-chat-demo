@@ -48,7 +48,9 @@
                 and end_time &lt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
             </when>
         </choose>
+        order by start_time desc
     </select>
+
 
     <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
         update test

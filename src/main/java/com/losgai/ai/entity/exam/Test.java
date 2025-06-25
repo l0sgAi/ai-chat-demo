@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 考试结果表
+ * 考试信息表
  *
  * @TableName test
  */

@@ -1,8 +1,9 @@
 package com.losgai.ai.mapper;
 
+import com.losgai.ai.dto.StudentQuestionDto;
 import com.losgai.ai.entity.exam.QuestionBank;
-import com.losgai.ai.entity.exam.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -28,4 +29,26 @@ public interface QuestionBankMapper {
     int updateByPrimaryKey(QuestionBank record);
 
     List<QuestionBank> queryByKeyWord(String keyWord);
+
+    /**
+     * 根据题目类型与难度权重，从题库生成随机题目
+     *
+     * @param type 题型
+     * @param level 难度
+     * @param limit 取出题目的数量限制
+     * @return List<Test> 考试信息结果列表
+     */
+    List<Long> getQuestionsByTypeAndLevel(@Param("type") int type,
+                                          @Param("level") int level,
+                                          @Param("limit") int limit);
+
+    /**
+     * 获取所有题组ID
+     *
+     * @return List<QuestionIdTypeLevelDto>
+     */
+    List<Long> getAllQuestionGroupIds();
+
+    List<StudentQuestionDto> selectByIds(List<Long> allQuestionGroupIds);
+
 }

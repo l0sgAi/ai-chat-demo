@@ -1,13 +1,12 @@
 package com.losgai.ai.controller.exam;
 
-import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.losgai.ai.common.Result;
-import com.losgai.ai.entity.exam.QuestionBank;
+import com.losgai.ai.dto.StudentQuestionDto;
 import com.losgai.ai.entity.exam.Test;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.enums.SysRoleEnum;
 import com.losgai.ai.service.exam.QuestionBankService;
 import com.losgai.ai.service.exam.TestService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,11 +26,12 @@ public class TestController {
 
     private final TestService testService;
 
+    private final QuestionBankService questionBankService;
+
     @PostMapping("/add")
+    @SaCheckRole("admin")
     @Tag(name = "新增考试", description = "管理员新增考试信息")
     public Result<String> add(@RequestBody Test test) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = testService.add(test);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("新增考试信息成功");
@@ -46,8 +46,6 @@ public class TestController {
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         // 开启分页
         PageHelper.startPage(pageNum, pageSize);
         // 执行查询
@@ -58,12 +56,18 @@ public class TestController {
         return Result.page(list, pageInfo.getTotal());
     }
 
+    @GetMapping("/getTestQuestion")
+    @Tag(name = "获取考试题目", description = "根据题型和难度权重，从题库生成随机题目")
+    public Result<List<StudentQuestionDto>> getTestQuestion(@RequestParam Long testId) {
+        List<StudentQuestionDto> list = questionBankService.getTestQuestion(testId);
+        return Result.success(list);
+    }
+
 
     @PutMapping("/update")
+    @SaCheckRole("admin")
     @Tag(name = "编辑考试信息", description = "管理员编辑考试信息")
     public Result<String> update(@RequestBody Test test) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = testService.update(test);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("编辑考试信息成功");
@@ -72,10 +76,9 @@ public class TestController {
     }
 
     @PutMapping("/delete")
+    @SaCheckRole("admin")
     @Tag(name = "逻辑删除考试信息", description = "管理员逻辑删除考试信息")
     public Result<String> delete(@RequestParam Long id) {
-        // 验证当前会话是否为管理员
-        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = testService.delete(id);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("删除考试信息成功");

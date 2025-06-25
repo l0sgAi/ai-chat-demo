@@ -1,4 +1,4 @@
-package com.losgai.ai.entity.exam;
+package com.losgai.ai.dto;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -9,11 +9,11 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
-* 试题库表
+* 学生-试题DTO
 * @TableName question_bank
 */
 @Data
-public class QuestionBank implements Serializable {
+public class StudentQuestionDto implements Serializable {
 
     /**
     * 主键，自增ID
@@ -44,9 +44,17 @@ public class QuestionBank implements Serializable {
     */
     private String answer;
     /**
+     * 学生答案-文本
+     */
+    private String stuAnswer;
+    /**
     * 正确答案-选项 ABCD对应0123 正确/错误 对应 0/1
     */
     private Integer answerOption;
+    /**
+     * 学生答案-选项 ABCD对应0123 正确/错误 对应 0/1
+     */
+    private Integer stuAnswerOption;
     /**
     * 试题解析说明
     */

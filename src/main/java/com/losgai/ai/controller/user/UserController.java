@@ -2,10 +2,13 @@ package com.losgai.ai.controller.user;
 
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
+import com.alibaba.fastjson2.JSONObject;
 import com.losgai.ai.common.Result;
+import com.losgai.ai.dto.ChangePwdDto;
 import com.losgai.ai.dto.LoginDto;
 import com.losgai.ai.entity.exam.User;
 import com.losgai.ai.enums.ResultCodeEnum;
+import com.losgai.ai.mapper.UserMapper;
 import com.losgai.ai.service.exam.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +25,13 @@ public class UserController {
 
     private final UserService userService;
 
+    private final UserMapper userMapper;
+
     @PostMapping("/auth/doLogin")
-    @Tag(name = "用户登录",description = "用户单点登录")
+    @Tag(name = "用户登录", description = "用户单点登录")
     public Result<SaTokenInfo> doLogin(@RequestBody LoginDto loginDto) {
         ResultCodeEnum resultCodeEnum = userService.doLogin(loginDto);
-        if(Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())){
+        if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             // 获取令牌
             SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
             // 返回给前端
@@ -36,10 +41,10 @@ public class UserController {
     }
 
     @PostMapping("/auth/doRegister")
-    @Tag(name = "用户注册",description = "用户单点注册")
+    @Tag(name = "用户注册", description = "用户单点注册")
     public Result<SaTokenInfo> doRegister(@RequestBody User user) {
         ResultCodeEnum resultCodeEnum = userService.doRegister(user);
-        if(Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())){
+        if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             // 获取令牌
             SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
             // 返回给前端
@@ -58,12 +63,23 @@ public class UserController {
     @GetMapping("/getUserInfo")
     @Tag(name = "获取用户信息", description = "获取当前登录用户信息")
     public Result<User> getUserInfo() {
-        if(StpUtil.isLogin()){ // 判断是否登录
+        if (StpUtil.isLogin()) { // 判断是否登录
             // 从Session中获取用 户信息（如果登录时已保存）
-            User user = (User) StpUtil.getSession().get("user");
+            User user = ((JSONObject) StpUtil.getSession().get("user")).to(User.class);
             return Result.success(user);
         }
         return Result.error("用户未登录");
     }
+
+    @PutMapping("/update")
+    @Tag(name = "更新用户信息", description = "更新当前登录的用户密码")
+    public Result<String> update(@RequestBody ChangePwdDto changePwdDto) {
+        ResultCodeEnum resultCodeEnum = userService.changePwd(changePwdDto);
+        if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
+            return Result.success("修改密码成功");
+        }
+        return Result.error(resultCodeEnum.getMessage());
+    }
+
 
 }

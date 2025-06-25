@@ -1,9 +1,14 @@
 package com.losgai.ai.service.exam.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.ObjUtil;
+import com.alibaba.fastjson2.JSON;
+import com.losgai.ai.dto.StudentQuestionDto;
 import com.losgai.ai.entity.exam.QuestionBank;
-import com.losgai.ai.entity.exam.User;
+import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.mapper.QuestionBankMapper;
+import com.losgai.ai.mapper.TestResultMapper;
 import com.losgai.ai.service.exam.QuestionBankService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,16 +26,18 @@ public class QuestionBankServiceImpl implements QuestionBankService {
 
     private final QuestionBankMapper questionBankMapper;
 
+    private final TestResultMapper testResultMapper;
+
     @Override
     @Description("新增试题信息")
     public ResultCodeEnum add(QuestionBank questionBank) {
         questionBank.setCreatedTime(Date.from(Instant.now()));
         questionBank.setUpdatedTime(Date.from(Instant.now()));
         questionBank.setDeleted(0);
-        if(questionBank.getType() == 2){
+        if (questionBank.getType() == 2) {
             // 简答题
             questionBank.setAnswerOption(-1);
-        }else {
+        } else {
             // 选择判断题
             questionBank.setAnswer("简答题");
         }
@@ -42,10 +49,10 @@ public class QuestionBankServiceImpl implements QuestionBankService {
     @Description("更新试题信息")
     public ResultCodeEnum update(QuestionBank questionBank) {
         questionBank.setUpdatedTime(Date.from(Instant.now()));
-        if(questionBank.getType() == 2){
+        if (questionBank.getType() == 2) {
             // 简答题
             questionBank.setAnswerOption(-1);
-        }else {
+        } else {
             // 选择判断题
             questionBank.setAnswer("简答题");
         }
@@ -64,5 +71,35 @@ public class QuestionBankServiceImpl implements QuestionBankService {
     @Description("查询试题信息")
     public List<QuestionBank> queryByKeyWord(String keyWord) {
         return questionBankMapper.queryByKeyWord(keyWord);
+    }
+
+    @Override
+    @Description("生成随机的考试题目列表")
+    public List<StudentQuestionDto> getTestQuestion(Long testId) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        // 先查询是否之前有保存过的考试结果
+        TestResult result = testResultMapper.getExistedQuestion(userId, testId);
+        // 没有查到之前的结果，开始随机生成题目
+        if (ObjUtil.isNull(result)) {
+            // 返回生成的题目id
+            List<Long> ids = questionBankMapper.getAllQuestionGroupIds();
+            // 直接根据id返回题目列表
+            List<StudentQuestionDto> list = questionBankMapper.selectByIds(ids);
+            // 保存当前考试与用户的考题
+            TestResult testResult = new TestResult();
+            testResult.setUserId(userId);
+            testResult.setTestId(testId);
+            // 将题目与答案列表list转换成json字符串，使用fastjson2
+            testResult.setContent(JSON.toJSONString(list));
+            testResult.setCreatedTime(Date.from(Instant.now()));
+            testResult.setTimeUsed(0);
+            testResult.setDeleted(0);
+            testResult.setScore(0);
+            testResultMapper.insert(testResult);
+            return list;
+        }
+        String questionStr = result.getContent();
+        // 解析成列表
+        return JSON.parseArray(questionStr, StudentQuestionDto.class);
     }
 }

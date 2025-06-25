@@ -26,7 +26,7 @@
 3. 学生可以修改密码、进行考试、查看历史成绩。
 
 4. 其中，出题的时候，对于每个学生，系统随机抽取题库，按照题型抽取，选择题10道，每题`3`分，`3`容易`5`中等`2`困难；判断题`10`道，每题
-   `2`分，`3`容易`5`中等`2`困难；简答题`5`道，每题`10`分，`1`容易`2`中等`1`困难。
+   `2`分，`3`容易`5`中等`2`困难；简答题`5`道，每题`10`分，`1`容易`2`中等`2`困难。
 
 5. 考试结束的时候，学生手动提交或到时间系统自动提交，选择判断题直接出成绩，简答题交给`AI`
    判断分数，先插入选择判断题的结果，打分完成后更新分数，并可以查看报告：学生点击”查看详情“显示对应的报告，使用`json`
@@ -90,6 +90,7 @@ CREATE TABLE test
     id               BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键，自增ID',
     name             VARCHAR(255) NOT NULL COMMENT '考试名称',
     created_time     DATETIME   DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_time     DATETIME   DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
     start_time       DATETIME     NOT NULL COMMENT '考试开始时间',
     end_time         DATETIME     NOT NULL COMMENT '考试结束时间',
     duration_minutes INT          NOT NULL COMMENT '考试持续时间-秒',

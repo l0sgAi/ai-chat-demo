@@ -27,4 +27,7 @@ public interface TestResultMapper {
     int updateByPrimaryKey(TestResult record);
 
     List<TestResult> queryByKeyWord(String keyWord);
+
+    TestResult getExistedQuestion(Long userId, Long testId);
+
 }

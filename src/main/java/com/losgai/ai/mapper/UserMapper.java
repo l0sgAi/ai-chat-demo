@@ -38,4 +38,7 @@ public interface UserMapper {
                          @Param("userPhone") String userPhone);
 
     List<User> queryByKeyWord(String keyWord);
+
+    void updatePwd(@Param("newPwd") String newPwd,
+                   @Param("id") Long id);
 }

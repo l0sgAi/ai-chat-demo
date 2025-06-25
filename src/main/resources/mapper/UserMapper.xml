@@ -182,4 +182,10 @@
             deleted =  #{deleted,jdbcType=TINYINT}
         where   id = #{id,jdbcType=BIGINT} 
     </update>
+
+    <update id="updatePwd">
+        update user
+        set password = #{newPwd,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
 </mapper>
