@@ -17,13 +17,14 @@
     </resultMap>
 
     <resultMap id="DisplayResultMap" type="com.losgai.ai.vo.EchartDisplayVo">
-        <result property="userId" jdbcType="BIGINT"/>
-        <result property="username" jdbcType="VARCHAR"/>
-        <result property="classname" jdbcType="VARCHAR"/>
-        <result property="testId" jdbcType="BIGINT"/>
-        <result property="testName" jdbcType="VARCHAR"/>
-        <result property="timeUsed" jdbcType="INTEGER"/>
-        <result property="score" jdbcType="INTEGER"/>
+        <result property="userId" column="userId" jdbcType="BIGINT"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="classname" column="classname" jdbcType="VARCHAR"/>
+        <result property="testId" column="testId" jdbcType="BIGINT"/>
+        <result property="testName" column="testName" jdbcType="VARCHAR"/>
+        <result property="timeUsed" column="timeUsed" jdbcType="INTEGER"/>
+        <result property="score" column="score" jdbcType="INTEGER"/>
+        <result property="endTime" column="endTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -84,7 +85,8 @@
                u.nickname   AS classname,
                t.id         AS testId,
                t.name       AS testName,
-               tr.time_used AS timeUsed
+               tr.time_used AS timeUsed,
+               t.end_time AS endTime
         FROM test_result tr
                  LEFT JOIN test t ON tr.test_id = t.id AND t.deleted = 0
                  LEFT JOIN user u ON tr.user_id = u.id AND u.deleted = 0

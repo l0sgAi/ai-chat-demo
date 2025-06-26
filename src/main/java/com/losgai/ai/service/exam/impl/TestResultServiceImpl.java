@@ -174,7 +174,7 @@ public class TestResultServiceImpl implements TestResultService {
                     String user = "# Content to Evaluate:\n" +
                             "<Question>" + item.getContent() + "</Question>\n" +
                             "<StudentAnswer>" + item.getStuAnswer() + "</StudentAnswer>\n"+
-                            "<RealAnswer>"+item.getAnswer()+"<RealAnswer>";
+                            "<RealAnswer>"+item.getAnswer()+"<RealAnswer>\n";
                     // 获取反应式对话流
                     ChatResponse chatResponse = aiChatService.simpleSendQuestion(sys, user, assist);
                     String mark = chatResponse.getResult().getOutput().getText();

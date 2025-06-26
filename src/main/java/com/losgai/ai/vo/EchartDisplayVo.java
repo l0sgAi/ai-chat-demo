@@ -1,6 +1,9 @@
 package com.losgai.ai.vo;
 
 import lombok.Data;
+
+import java.util.Date;
+
 /**
  * 用于Echart显示的VO
  * */
@@ -35,5 +38,10 @@ public class EchartDisplayVo {
      * 最终得分
      */
     private Integer score;
+
+    /**
+     * 考试结束时间
+     * */
+    private Date endTime;
 
 }
