@@ -16,6 +16,16 @@
         <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
+    <resultMap id="DisplayResultMap" type="com.losgai.ai.vo.EchartDisplayVo">
+        <result property="userId" jdbcType="BIGINT"/>
+        <result property="username" jdbcType="VARCHAR"/>
+        <result property="classname" jdbcType="VARCHAR"/>
+        <result property="testId" jdbcType="BIGINT"/>
+        <result property="testName" jdbcType="VARCHAR"/>
+        <result property="timeUsed" jdbcType="INTEGER"/>
+        <result property="score" jdbcType="INTEGER"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         id,user_id,test_id,content,
         time_used,score,status,created_time,
@@ -65,6 +75,22 @@
         AND user_id = #{userId,jdbcType=BIGINT}
         AND test_id = #{testId,jdbcType=BIGINT}
         LIMIT 1
+    </select>
+
+    <select id="selectableVo" resultMap="DisplayResultMap">
+        SELECT tr.user_id   AS userId,
+               tr.score     AS score,
+               u.username   AS username,
+               u.nickname   AS classname,
+               t.id         AS testId,
+               t.name       AS testName,
+               tr.time_used AS timeUsed
+        FROM test_result tr
+                 LEFT JOIN test t ON tr.test_id = t.id AND t.deleted = 0
+                 LEFT JOIN user u ON tr.user_id = u.id AND u.deleted = 0
+        WHERE tr.deleted = 0
+          AND tr.status = 2
+        ORDER BY t.end_time DESC;
     </select>
 
     <update id="deleteByPrimaryKey" parameterType="java.lang.Long">

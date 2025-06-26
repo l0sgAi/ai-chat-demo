@@ -1,13 +1,14 @@
 package com.losgai.ai.controller.exam;
 
-import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.StpUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.losgai.ai.common.Result;
 import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
+import com.losgai.ai.enums.SysRoleEnum;
 import com.losgai.ai.service.exam.TestResultService;
+import com.losgai.ai.vo.EchartDisplayVo;
 import com.losgai.ai.vo.TestHistoryVo;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/exam/tetsResult")
+@RequestMapping("/exam/testResult")
 @Slf4j
 public class TestResultController {
 
@@ -70,14 +71,22 @@ public class TestResultController {
     }
 
     @PutMapping("/delete")
-    @SaCheckRole("admin")
     @Tag(name = "删除考试结果信息", description = "逻辑删除考试结果信息")
     public Result<String> delete(@RequestParam Long id) {
+        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
         ResultCodeEnum resultCodeEnum = testResultService.delete(id);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
             return Result.success("删除考试结果信息成功");
         }
         return Result.error(resultCodeEnum.getMessage());
+    }
+
+    @GetMapping("/getDisplay")
+    @Tag(name = "获取考试结果信息", description = "管理员获取考试结果统计信息")
+    public Result<List<EchartDisplayVo>> getEchartDisplay() {
+        StpUtil.checkRole(SysRoleEnum.ADMIN.getMessage());
+        List<EchartDisplayVo> list = testResultService.selectableVo();
+        return Result.success(list);
     }
 
 }

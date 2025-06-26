@@ -2,6 +2,7 @@ package com.losgai.ai.service.exam;
 
 import com.losgai.ai.entity.exam.TestResult;
 import com.losgai.ai.enums.ResultCodeEnum;
+import com.losgai.ai.vo.EchartDisplayVo;
 import com.losgai.ai.vo.TestHistoryVo;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface TestResultService {
     List<TestHistoryVo> queryByKeyWord(String keyWord);
 
     CompletableFuture<Integer> submit(TestResult testResult,Long loginId);
+
+    List<EchartDisplayVo> selectableVo();
 }

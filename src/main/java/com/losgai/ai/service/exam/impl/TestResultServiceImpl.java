@@ -12,6 +12,7 @@ import com.losgai.ai.mapper.TestMapper;
 import com.losgai.ai.mapper.TestResultMapper;
 import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.service.exam.TestResultService;
+import com.losgai.ai.vo.EchartDisplayVo;
 import com.losgai.ai.vo.TestHistoryVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +58,10 @@ public class TestResultServiceImpl implements TestResultService {
             "<Question>What is Newton's First Law of Motion?</Question>\n" +
             "<StudentAnswer>Newton's First Law states that an object will remain at rest or in " +
             "uniform motion in a straight line unless acted upon by an external force.</StudentAnswer>\n" +
+            "<RealAnswer>Newton's First Law of Motion: The Law of Inertia<RealAnswer>" +
             "\n" +
             "# Example Output:\n" +
-            "9"; // The comment "Must be integer" is for human developers, not the model. The model's output should just be "9".
+            "9";
 
     @Override
     @Description("新增考试结果信息")
@@ -171,7 +173,8 @@ public class TestResultServiceImpl implements TestResultService {
                     // 用户提示词
                     String user = "# Content to Evaluate:\n" +
                             "<Question>" + item.getContent() + "</Question>\n" +
-                            "<StudentAnswer>" + item.getStuAnswer() + "</StudentAnswer>";
+                            "<StudentAnswer>" + item.getStuAnswer() + "</StudentAnswer>\n"+
+                            "<RealAnswer>"+item.getAnswer()+"<RealAnswer>";
                     // 获取反应式对话流
                     ChatResponse chatResponse = aiChatService.simpleSendQuestion(sys, user, assist);
                     String mark = chatResponse.getResult().getOutput().getText();
@@ -193,5 +196,14 @@ public class TestResultServiceImpl implements TestResultService {
             testResultMapper.updateByPrimaryKeySelective(curTestResult);
             return score;
         }, Executors.newVirtualThreadPerTaskExecutor());
+    }
+
+
+    /**
+     * 数据统计接口
+     */
+    @Override
+    public List<EchartDisplayVo> selectableVo() {
+        return testResultMapper.selectableVo();
     }
 }

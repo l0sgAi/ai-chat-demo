@@ -1,6 +1,7 @@
 package com.losgai.ai.mapper;
 
 import com.losgai.ai.entity.exam.TestResult;
+import com.losgai.ai.vo.EchartDisplayVo;
 import com.losgai.ai.vo.TestHistoryVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -32,5 +33,7 @@ public interface TestResultMapper {
                                        @Param("loginId") Long loginId);
 
     TestResult getExistedQuestion(Long userId, Long testId);
+
+    List<EchartDisplayVo> selectableVo();
 
 }

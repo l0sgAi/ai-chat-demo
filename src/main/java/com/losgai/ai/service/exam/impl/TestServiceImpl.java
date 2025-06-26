@@ -43,9 +43,11 @@ public class TestServiceImpl implements TestService {
     @Override
     @Description("更新考试信息")
     public ResultCodeEnum update(Test test) {
+        // 获取之前的记录
+        Test curTest = testMapper.selectByPrimaryKey(test.getId());
         Date now = Date.from(Instant.now());
         // 不更新正在进行的考试
-        if (now.after(test.getStartTime()) && now.before(test.getEndTime())) {
+        if (now.after(curTest.getStartTime()) && now.before(curTest.getEndTime())) {
             return ResultCodeEnum.TIMING_ERROR;
         }
         // 参数校验
