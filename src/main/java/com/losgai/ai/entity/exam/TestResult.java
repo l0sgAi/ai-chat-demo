@@ -38,6 +38,11 @@ public class TestResult implements Serializable {
      */
     private Integer score;
     /**
+     * 状态0-初始 1-已经保存 2-已经提交 3-评分异常
+     *
+     */
+    private Integer status;
+    /**
      * 创建时间
      */
     private Date createdTime;

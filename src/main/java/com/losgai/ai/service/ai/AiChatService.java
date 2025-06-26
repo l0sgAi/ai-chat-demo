@@ -1,7 +1,9 @@
 package com.losgai.ai.service.ai;
 
 import com.losgai.ai.dto.AiChatParamDTO;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import reactor.core.publisher.Flux;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -25,7 +27,7 @@ public interface AiChatService {
      * */
     CompletableFuture<Boolean> sendQuestionAsync(AiChatParamDTO aiChatParamDTO, String sessionId);
 
-    CompletableFuture<String> simpleSendQuestion(String sysText,String userText,String assistText);
+    ChatResponse simpleSendQuestion(String sysText, String userText, String assistText);
     
 
     /** 获取流式返回结果*/

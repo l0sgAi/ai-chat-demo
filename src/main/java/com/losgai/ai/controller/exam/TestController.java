@@ -40,7 +40,7 @@ public class TestController {
     }
 
     @GetMapping("/query")
-    @Tag(name = "查询考试", description = "管理员根据关键字和状态分页查询考试信息，其中status 0-未开始 1-进行中 2-已结束")
+    @Tag(name = "查询考试", description = "根据关键字和状态分页查询考试信息，其中status 0-未开始 1-进行中 2-已结束")
     public Result<List<Test>> query(
             @RequestParam(required = false) String keyWord,
             @RequestParam(required = false) Integer status,
@@ -50,6 +50,24 @@ public class TestController {
         PageHelper.startPage(pageNum, pageSize);
         // 执行查询
         List<Test> list = testService.queryByKeyWord(keyWord,status);
+        // 获取分页信息
+        PageInfo<Test> pageInfo = new PageInfo<>(list);
+        // 使用自定义分页返回方法
+        return Result.page(list, pageInfo.getTotal());
+    }
+
+    @GetMapping("/queryAdmin")
+    @SaCheckRole("admin")
+    @Tag(name = "查询考试", description = "管理员根据关键字和状态分页查询考试信息，其中status 0-未开始 1-进行中 2-已结束")
+    public Result<List<Test>> queryAdmin(
+            @RequestParam(required = false) String keyWord,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        // 开启分页
+        PageHelper.startPage(pageNum, pageSize);
+        // 执行查询
+        List<Test> list = testService.queryByKeyWordAdmin(keyWord,status);
         // 获取分页信息
         PageInfo<Test> pageInfo = new PageInfo<>(list);
         // 使用自定义分页返回方法

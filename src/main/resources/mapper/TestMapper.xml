@@ -5,14 +5,14 @@
 <mapper namespace="com.losgai.ai.mapper.TestMapper">
 
     <resultMap id="BaseResultMap" type="com.losgai.ai.entity.exam.Test">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="name" column="name" jdbcType="VARCHAR"/>
-            <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
-            <result property="updatedTime" column="updated_time" jdbcType="TIMESTAMP"/>
-            <result property="startTime" column="start_time" jdbcType="TIMESTAMP"/>
-            <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
-            <result property="durationMinutes" column="duration_minutes" jdbcType="INTEGER"/>
-            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
+        <result property="updatedTime" column="updated_time" jdbcType="TIMESTAMP"/>
+        <result property="startTime" column="start_time" jdbcType="TIMESTAMP"/>
+        <result property="endTime" column="end_time" jdbcType="TIMESTAMP"/>
+        <result property="durationMinutes" column="duration_minutes" jdbcType="INTEGER"/>
+        <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -21,34 +21,74 @@
         deleted
     </sql>
 
+    <sql id="Join_Column_List">
+        t.id as id,t.name as name,t.created_time as created_time,t.updated_time as updated_time,
+        t.start_time as start_time,t.end_time as end_time,t.duration_minutes as duration_minutes,
+        t.deleted as deleted
+    </sql>
+
     <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
         select
-        <include refid="Base_Column_List" />
+        <include refid="Base_Column_List"/>
         from test
-        where  id = #{id,jdbcType=BIGINT} 
+        where id = #{id,jdbcType=BIGINT}
     </select>
 
     <select id="queryByKeyWord" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List" />
-        from test
-        where deleted = 0
+        SELECT
+        <include refid="Join_Column_List"/>
+        FROM test t
+        LEFT JOIN test_result tr ON tr.test_id = t.id
+        AND tr.user_id = #{loginId}
+        AND tr.deleted = 0
+        WHERE
+        t.deleted = 0
         <if test="keyWord != null and keyWord != ''">
-            and name like concat('%', #{keyWord}, '%')
+            AND t.name LIKE CONCAT('%', #{keyWord}, '%')
         </if>
         <choose>
             <when test="status == 0">
-                and start_time &gt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                AND t.start_time &gt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
             </when>
             <when test="status == 1">
-                and start_time &lt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
-                and end_time &gt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                AND t.start_time &lt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                AND t.end_time &gt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
             </when>
             <when test="status == 2">
-                and end_time &lt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                AND t.end_time &lt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
             </when>
         </choose>
-        order by start_time desc
+        -- 1. 如果用户还没有考试结果 (tr.id IS NULL)，则显示该测试。
+        -- 2. 如果用户有考试结果，则只显示状态为 0 或 1 的。
+        AND (tr.id IS NULL OR tr.status IN (0, 1))
+        ORDER BY t.start_time DESC
+    </select>
+
+
+    <select id="queryByKeyWordAdmin" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from test
+        where deleted = 0
+        <if test="keyWord != null and keyWord != ''">
+            AND name LIKE CONCAT('%',
+            #{keyWord},
+            '%'
+            )
+        </if>
+        <choose>
+            <when test="status == 0">
+                AND start_time &gt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
+            </when>
+            <when test="status == 1">
+                AND start_time &lt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
+                AND end_time &gt;= CONVERT_TZ(NOW(), '+00:00', '+08:00')
+            </when>
+            <when test="status == 2">
+                AND end_time &lt; CONVERT_TZ(NOW(), '+00:00', '+08:00')
+            </when>
+        </choose>
+        ORDER BY start_time DESC
     </select>
 
 
@@ -57,75 +97,84 @@
         set deleted = 1
         where id = #{id}
     </update>
-    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.Test" useGeneratedKeys="true">
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.Test"
+            useGeneratedKeys="true">
         insert into test
-        ( id,name,created_time,updated_time
-        ,start_time,end_time,duration_minutes
-        ,deleted)
-        values (#{id,jdbcType=BIGINT},#{name,jdbcType=VARCHAR},#{createdTime,jdbcType=TIMESTAMP},#{updatedTime,jdbcType=TIMESTAMP}
-        ,#{startTime,jdbcType=TIMESTAMP},#{endTime,jdbcType=TIMESTAMP},#{durationMinutes,jdbcType=INTEGER}
-        ,#{deleted,jdbcType=TINYINT})
+        ( id, name, created_time, updated_time
+        , start_time, end_time, duration_minutes
+        , deleted)
+        values ( #{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{createdTime,jdbcType=TIMESTAMP}
+               , #{updatedTime,jdbcType=TIMESTAMP}
+               , #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{durationMinutes,jdbcType=INTEGER}
+               , #{deleted,jdbcType=TINYINT})
     </insert>
-    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.Test" useGeneratedKeys="true">
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.Test"
+            useGeneratedKeys="true">
         insert into test
         <trim prefix="(" suffix=")" suffixOverrides=",">
-                <if test="id != null">id,</if>
-                <if test="name != null">name,</if>
-                <if test="createdTime != null">created_time,</if>
-                <if test="updatedTime != null">updated_time,</if>
-                <if test="startTime != null">start_time,</if>
-                <if test="endTime != null">end_time,</if>
-                <if test="durationMinutes != null">duration_minutes,</if>
-                <if test="deleted != null">deleted,</if>
+            <if test="id != null">id,</if>
+            <if test="name != null">name,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="durationMinutes != null">duration_minutes,</if>
+            <if test="deleted != null">deleted,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-                <if test="id != null">#{id,jdbcType=BIGINT},</if>
-                <if test="name != null">#{name,jdbcType=VARCHAR},</if>
-                <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
-                <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
-                <if test="startTime != null">#{startTime,jdbcType=TIMESTAMP},</if>
-                <if test="endTime != null">#{endTime,jdbcType=TIMESTAMP},</if>
-                <if test="durationMinutes != null">#{durationMinutes,jdbcType=INTEGER},</if>
-                <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
+            <if test="id != null">#{id,jdbcType=BIGINT},</if>
+            <if test="name != null">#{name,jdbcType=VARCHAR},</if>
+            <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
+            <if test="updatedTime != null">#{updatedTime,jdbcType=TIMESTAMP},</if>
+            <if test="startTime != null">#{startTime,jdbcType=TIMESTAMP},</if>
+            <if test="endTime != null">#{endTime,jdbcType=TIMESTAMP},</if>
+            <if test="durationMinutes != null">#{durationMinutes,jdbcType=INTEGER},</if>
+            <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.exam.Test">
         update test
         <set>
-                <if test="name != null">
-                    name = #{name,jdbcType=VARCHAR},
-                </if>
-                <if test="createdTime != null">
-                    created_time = #{createdTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="updatedTime != null">
-                    updated_time = #{updatedTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="startTime != null">
-                    start_time = #{startTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="endTime != null">
-                    end_time = #{endTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="durationMinutes != null">
-                    duration_minutes = #{durationMinutes,jdbcType=INTEGER},
-                </if>
-                <if test="deleted != null">
-                    deleted = #{deleted,jdbcType=TINYINT},
-                </if>
+            <if test="name != null">
+                name =
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="createdTime != null">
+                created_time =
+                #{createdTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updatedTime != null">
+                updated_time =
+                #{updatedTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="startTime != null">
+                start_time =
+                #{startTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="endTime != null">
+                end_time =
+                #{endTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="durationMinutes != null">
+                duration_minutes =
+                #{durationMinutes,jdbcType=INTEGER},
+            </if>
+            <if test="deleted != null">
+                deleted =
+                #{deleted,jdbcType=TINYINT},
+            </if>
         </set>
-        where   id = #{id,jdbcType=BIGINT} 
+        where id = #{id,jdbcType=BIGINT}
     </update>
     <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.exam.Test">
         update test
-        set 
-            name =  #{name,jdbcType=VARCHAR},
-            created_time =  #{createdTime,jdbcType=TIMESTAMP},
-            updated_time =  #{updatedTime,jdbcType=TIMESTAMP},
-            start_time =  #{startTime,jdbcType=TIMESTAMP},
-            end_time =  #{endTime,jdbcType=TIMESTAMP},
-            duration_minutes =  #{durationMinutes,jdbcType=INTEGER},
-            deleted =  #{deleted,jdbcType=TINYINT}
-        where   id = #{id,jdbcType=BIGINT} 
+        set name             = #{name,jdbcType=VARCHAR},
+            created_time     = #{createdTime,jdbcType=TIMESTAMP},
+            updated_time     = #{updatedTime,jdbcType=TIMESTAMP},
+            start_time       = #{startTime,jdbcType=TIMESTAMP},
+            end_time         = #{endTime,jdbcType=TIMESTAMP},
+            duration_minutes = #{durationMinutes,jdbcType=INTEGER},
+            deleted          = #{deleted,jdbcType=TINYINT}
+        where id = #{id,jdbcType=BIGINT}
     </update>
 </mapper>

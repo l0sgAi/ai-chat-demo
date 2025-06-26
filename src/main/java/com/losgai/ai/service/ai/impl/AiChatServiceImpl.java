@@ -328,12 +328,9 @@ public class AiChatServiceImpl implements AiChatService {
      * @param assistText 辅助提示词
      */
     @Override
-    public CompletableFuture<String> simpleSendQuestion(String sysText, String userText, String assistText) {
-        return CompletableFuture.supplyAsync(() -> {
-            AiConfig aiConfig = aiConfigMapper.selectDefaultTextModel();
-            ChatResponse chatResponse = OpenAiModelBuilderSpringAi.buildModelNoStream(aiConfig, sysText, userText, assistText);
-            return chatResponse.getResult().getOutput().getText();
-        }, Executors.newVirtualThreadPerTaskExecutor());  // 使用虚拟线程
+    public ChatResponse simpleSendQuestion(String sysText, String userText, String assistText) {
+        AiConfig aiConfig = aiConfigMapper.selectDefaultTextModel();
+        return OpenAiModelBuilderSpringAi.buildModelNoStream(aiConfig, sysText, userText, assistText);
     }
 
     /**

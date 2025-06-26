@@ -11,13 +11,14 @@
         <result property="content" column="content" jdbcType="VARCHAR"/>
         <result property="timeUsed" column="time_used" jdbcType="INTEGER"/>
         <result property="score" column="score" jdbcType="INTEGER"/>
+        <result property="status" column="status" javaType="INTEGER"/>
         <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
         <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,user_id,test_id,content,
-        time_used,score,created_time,
+        time_used,score,status,created_time,
         deleted
     </sql>
 
@@ -36,6 +37,7 @@
         tr.content as content,
         tr.time_used as timeUsed,
         tr.score as score,
+        tr.status as status,
         t.name as name,
         t.start_time as startTime,
         t.end_time as endTime,
@@ -51,6 +53,7 @@
             '%'
             )
         </if>
+        AND tr.status = 2
         ORDER BY t.end_time DESC
     </select>
 
@@ -72,11 +75,13 @@
             useGeneratedKeys="true">
         insert into test_result
         ( id, user_id, test_id, content
-        , time_used, score, created_time
+        , time_used, score,status, created_time
         , deleted)
         values ( #{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{testId,jdbcType=BIGINT}
                , #{content,jdbcType=VARCHAR}
-               , #{timeUsed,jdbcType=INTEGER}, #{score,jdbcType=INTEGER}, #{createdTime,jdbcType=TIMESTAMP}
+               , #{timeUsed,jdbcType=INTEGER}, #{score,jdbcType=INTEGER},
+                #{status,jdbcType=INTEGER},
+                #{createdTime,jdbcType=TIMESTAMP}
                , #{deleted,jdbcType=TINYINT})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.exam.TestResult"
@@ -89,6 +94,7 @@
             <if test="content != null">content,</if>
             <if test="timeUsed != null">time_used,</if>
             <if test="score != null">score,</if>
+            <if test="status != null">status,</if>
             <if test="createdTime != null">created_time,</if>
             <if test="deleted != null">deleted,</if>
         </trim>
@@ -99,6 +105,7 @@
             <if test="content != null">#{content,jdbcType=VARCHAR},</if>
             <if test="timeUsed != null">#{timeUsed,jdbcType=INTEGER},</if>
             <if test="score != null">#{score,jdbcType=INTEGER},</if>
+            <if test="status != null">#{status,jdbcType=INTEGER},</if>
             <if test="createdTime != null">#{createdTime,jdbcType=TIMESTAMP},</if>
             <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
         </trim>
@@ -126,6 +133,10 @@
                 score =
                 #{score,jdbcType=INTEGER},
             </if>
+            <if test="status != null">
+                status =
+                #{status,jdbcType=INTEGER},
+            </if>
             <if test="createdTime != null">
                 created_time =
                 #{createdTime,jdbcType=TIMESTAMP},
@@ -144,6 +155,7 @@
             content      = #{content,jdbcType=VARCHAR},
             time_used    = #{timeUsed,jdbcType=INTEGER},
             score        = #{score,jdbcType=INTEGER},
+            status       = #{status,jdbcType=INTEGER},
             created_time = #{createdTime,jdbcType=TIMESTAMP},
             deleted      = #{deleted,jdbcType=TINYINT}
         where id = #{id,jdbcType=BIGINT}

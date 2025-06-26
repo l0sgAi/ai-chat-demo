@@ -1,5 +1,6 @@
 package com.losgai.ai.service.exam.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.losgai.ai.entity.exam.Test;
 import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.mapper.TestMapper;
@@ -75,6 +76,12 @@ public class TestServiceImpl implements TestService {
     @Override
     @Description("条件查询考试信息")
     public List<Test> queryByKeyWord(String keyWord, Integer status) {
-        return testMapper.queryByKeyWord(keyWord, status);
+        long loginId = StpUtil.getLoginIdAsLong();
+        return testMapper.queryByKeyWord(keyWord, status,loginId);
+    }
+
+    @Override
+    public List<Test> queryByKeyWordAdmin(String keyWord, Integer status) {
+        return testMapper.queryByKeyWordAdmin(keyWord, status);
     }
 }

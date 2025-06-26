@@ -1,6 +1,7 @@
 package com.losgai.ai.controller.exam;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.losgai.ai.common.Result;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,7 +47,7 @@ public class TestResultController {
 
 
     @PutMapping("/update")
-    @Tag(name = "更新考试结果信息", description = "学生端更新考试结果信息")
+    @Tag(name = "保存考试结果信息", description = "学生端保存考试结果信息")
     public Result<String> update(@RequestBody TestResult testResult) {
         ResultCodeEnum resultCodeEnum = testResultService.update(testResult);
         if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
@@ -54,13 +57,16 @@ public class TestResultController {
     }
 
     @PutMapping("/submit")
-    @Tag(name = "提交考试结果信息", description = "学生端提交考试结果信息")
-    public Result<String> submit(@RequestBody TestResult testResult) {
-        ResultCodeEnum resultCodeEnum = testResultService.submit(testResult);
-        if (Objects.equals(resultCodeEnum.getCode(), ResultCodeEnum.SUCCESS.getCode())) {
-            return Result.success("编辑考试结果信息成功");
+    @Tag(name = "提交考试结果信息", description = "学生端提交考试结果信息，提交后不能继续编辑，返回分数")
+    public Result<Integer> submit(@RequestBody TestResult testResult) throws ExecutionException, InterruptedException {
+        long loginId = StpUtil.getLoginIdAsLong();
+        CompletableFuture<Integer> result = testResultService.submit(testResult, loginId);
+        Integer accepted = result.join();
+        // 如果不成功，会同步返回结果
+        if (accepted > 100) {
+            return Result.error("提交失败");
         }
-        return Result.error(resultCodeEnum.getMessage());
+        return Result.success(result.get());
     }
 
     @PutMapping("/delete")

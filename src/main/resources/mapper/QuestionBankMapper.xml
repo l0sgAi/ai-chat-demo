@@ -18,6 +18,20 @@
         <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
+    <resultMap id="DtoResultMap" type="com.losgai.ai.dto.StudentQuestionDto">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
+        <result property="level" column="level" jdbcType="INTEGER"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="answer" column="answer" jdbcType="VARCHAR"/>
+        <result property="answerOption" column="answer_option" jdbcType="INTEGER"/>
+        <result property="explanation" column="explanation" jdbcType="VARCHAR"/>
+        <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
+        <result property="updatedTime" column="updated_time" jdbcType="TIMESTAMP"/>
+        <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
     <sql id="Base_Column_List">
         id,title,type,
         level,content,answer,
@@ -131,7 +145,7 @@
                LIMIT 2)) AS all_questions
     </select>
 
-    <select id="selectByIds" resultMap="BaseResultMap">
+    <select id="selectByIds" resultMap="DtoResultMap">
         select
         <include refid="Base_Column_List"/>
         from question_bank

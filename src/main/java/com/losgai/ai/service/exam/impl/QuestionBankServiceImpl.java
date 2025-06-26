@@ -1,5 +1,6 @@
 package com.losgai.ai.service.exam.impl;
 
+import cn.dev33.satoken.secure.SaSecureUtil;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ObjUtil;
 import com.alibaba.fastjson2.JSON;
@@ -95,21 +96,27 @@ public class QuestionBankServiceImpl implements QuestionBankService {
             testResult.setTimeUsed(0);
             testResult.setDeleted(0);
             testResult.setScore(0);
+            testResult.setStatus(0);
             testResultMapper.insert(testResult);
-            // 清除list中的answer数据，防止通过控制台看到
-            list.forEach(item -> {
-                item.setAnswer("");
-                item.setAnswerOption(-1);
-            });
             return list;
         }
         String questionStr = result.getContent();
         // 解析成列表
         List<StudentQuestionDto> list = JSON.parseArray(questionStr, StudentQuestionDto.class);
-        list.forEach(item -> {
-            item.setAnswer("");
-            item.setAnswerOption(-1);
-        });
         return list;
+    }
+
+    @Description("加密答案")
+    private static void encryptAnswer(List<StudentQuestionDto> list) {
+        for (StudentQuestionDto item : list) {
+            if (item.getType() == 2) {
+                item.setAnswer("");
+            } else {
+                // 选择判断题，加密选择题判断的答案，放到Answer字段中，对比密文即可
+                item.setAnswer(SaSecureUtil.sha256(String.valueOf(item.getAnswerOption())));
+            }
+            item.setAnswerOption(-1);
+            item.setExplanation("");
+        }
     }
 }

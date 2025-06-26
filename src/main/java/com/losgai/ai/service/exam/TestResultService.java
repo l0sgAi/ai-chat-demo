@@ -5,6 +5,7 @@ import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.vo.TestHistoryVo;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public interface TestResultService {
 
@@ -17,5 +18,5 @@ public interface TestResultService {
 
     List<TestHistoryVo> queryByKeyWord(String keyWord);
 
-    ResultCodeEnum submit(TestResult testResult);
+    CompletableFuture<Integer> submit(TestResult testResult,Long loginId);
 }

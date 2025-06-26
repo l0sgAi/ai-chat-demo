@@ -15,4 +15,6 @@ public interface TestService {
     ResultCodeEnum delete(Long id);
 
     List<Test> queryByKeyWord(String keyWord,Integer status);
+
+    List<Test> queryByKeyWordAdmin(String keyWord, Integer status);
 }

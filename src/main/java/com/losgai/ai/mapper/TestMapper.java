@@ -35,6 +35,9 @@ public interface TestMapper {
      * @return List<Test> 考试信息结果列表
      */
     List<Test> queryByKeyWord(@Param("keyWord") String keyWord,
-                              @Param("status") Integer status);
+                              @Param("status") Integer status,
+                              @Param("loginId") Long loginId);
 
+    List<Test> queryByKeyWordAdmin(@Param("keyWord") String keyWord,
+                                   @Param("status") Integer status);
 }
