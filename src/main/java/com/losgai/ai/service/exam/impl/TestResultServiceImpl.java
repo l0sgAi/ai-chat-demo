@@ -188,6 +188,8 @@ public class TestResultServiceImpl implements TestResultService {
                     }
                 }
             }
+            // 更新答题内容
+            curTestResult.setContent(content);
             // 最终的打分
             curTestResult.setScore(score);
             // 更新状态 2-已提交
