@@ -1,5 +1,6 @@
 package com.losgai.ai.service.ai.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
@@ -27,8 +28,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
      */
     @Override
     public Long addSession(AiSession aiSession) {
-        // TODO 传入真实用户id
-        aiSession.setUserId(0L);
+        aiSession.setUserId(StpUtil.getLoginIdAsLong());
         aiSession.setCreatedTime(Date.from(Instant.now()));
         aiSession.setLastMessageTime(Date.from(Instant.now()));
         log.info("会话准备插入数据库:{}", aiSession);
@@ -42,8 +42,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
      */
     @Override
     public List<AiSession> selectByKeyword(String keyword) {
-        // TODO 传入真实用户id
-        return aiSessionMapper.selectAllByUserId(keyword, 0L);
+        return aiSessionMapper.selectAllByUserId(keyword, StpUtil.getLoginIdAsLong());
     }
 
     /**

@@ -30,15 +30,15 @@
     </select>
 
     <select id="selectAllByUserId" resultType="com.losgai.ai.entity.ai.AiSession">
-        SELECT DISTINCT ais.id,
-        ais.title,
-        ais.is_favorite,
-        ais.created_time,
-        ais.last_message_time,
-        ais.user_id,
-        ais.model_id,
-        ais.tags,
-        ais.summary
+        SELECT DISTINCT ais.id as id,
+        ais.title as title,
+        ais.is_favorite as isFavorite,
+        ais.created_time as createdTime,
+        ais.last_message_time as lastMessageTime,
+        ais.user_id as userId,
+        ais.model_id as modelId,
+        ais.tags as tags,
+        ais.summary as summary
         FROM ai_session ais
         LEFT JOIN ai_message_pair aim ON ais.id = aim.session_id
         WHERE ais.user_id = #{userId}
