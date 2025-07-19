@@ -149,7 +149,7 @@
         where sse_session_id = #{sseSessionId,jdbcType=VARCHAR}
     </update>
 
-    <select id="selectBySessionId" resultType="com.losgai.ai.entity.ai.AiMessagePair">
+    <select id="selectBySessionId" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List" />
         from ai_message_pair

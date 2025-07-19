@@ -25,7 +25,7 @@ public class AiMessagePairController {
         return Result.success("新增消息成功！");
     }
     
-    @GetMapping("select/{sessionId}")
+    @GetMapping("/select/{sessionId}")
     @Tag(name = "查询会话消息",description = "根据会话id，查询会话消息")
     public Result<List<AiMessagePair>> getAiChatMessage(@PathVariable("sessionId") Long sessionId) {
         return Result.success(aiMessagePairService.selectBySessionId(sessionId));
