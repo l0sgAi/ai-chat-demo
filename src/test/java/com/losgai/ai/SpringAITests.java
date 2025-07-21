@@ -27,6 +27,7 @@ public class SpringAITests {
 
     @Test
     public void springAIStreamChat() throws InterruptedException {
+
         // 计时器
         CountDownLatch countDownLatch = new CountDownLatch(1);
 

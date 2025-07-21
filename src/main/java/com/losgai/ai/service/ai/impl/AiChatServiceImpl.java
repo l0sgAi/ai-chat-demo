@@ -259,7 +259,7 @@ public class AiChatServiceImpl implements AiChatService {
                         }
                         if (StrUtil.isNotBlank(text)) {
                             sb.append(text);
-                            log.info("当前段数据:{}", text);
+                            // log.info("当前段数据:{}", text);
                             // 换行符转义：token换行符转换成<br>
                             text = text.replace("\n", "<br>");
                             // 换行符转义：如果token以换行符为结尾，转换成<br>
