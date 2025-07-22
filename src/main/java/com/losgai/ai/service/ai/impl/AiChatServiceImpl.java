@@ -166,7 +166,7 @@ public class AiChatServiceImpl implements AiChatService {
                         }
                         finalEmitter.complete();
                         emitterManager.removeEmitter(sessionId); // 只在流结束后移除
-                        log.info("最终拼接的数据:{}", sb);
+                        log.info("最终拼接的数据:\n{}", sb);
                         log.info("token使用:{}", usageCount);
                         // 更新正常完成的状态
                         tryUpdateMessage(aiMessagePair,
@@ -177,7 +177,6 @@ public class AiChatServiceImpl implements AiChatService {
             return true;
         }, Executors.newVirtualThreadPerTaskExecutor());
     }
-
 
     /**
      * 异步处理AI对话请求，基于SSE实现流式输出。
