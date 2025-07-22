@@ -22,12 +22,12 @@ public class AiChatController {
 
     private final AiChatService aiChatService;
 
-
     @PostMapping("/send")
     @Tag(name = "ai会话请求",description = "通过参数获取AI对话请求，返回唯一会话id")
     public Result<String> sendQuestion(@RequestBody AiChatParamDTO aiChatParamDTO) {
         String sessionId = UUID.randomUUID() + "_" + currentTimeMillis();
-        CompletableFuture<Boolean> future = aiChatService.sendQuestionAsync(aiChatParamDTO, sessionId);
+//        CompletableFuture<Boolean> future = aiChatService.sendQuestionAsync(aiChatParamDTO, sessionId);
+        CompletableFuture<Boolean> future = aiChatService.sendQuestionAsyncWithMemo(aiChatParamDTO, sessionId);
         // 立即获取结果（因为拒绝时会同步返回）
         boolean accepted = future.join();
         if (!accepted) {

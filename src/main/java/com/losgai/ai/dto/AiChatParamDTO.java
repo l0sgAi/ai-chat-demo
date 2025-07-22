@@ -11,6 +11,11 @@ public class AiChatParamDTO {
     private Long chatSessionId;
 
     /**
+     * 对话id
+     */
+    private Long conversationId;
+
+    /**
      * 问题
      */
     private String question;

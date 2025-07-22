@@ -8,13 +8,29 @@ import com.losgai.ai.enums.AiMessageStatusEnum;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
+import com.losgai.ai.memory.MybatisChatMemory;
 import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.service.ai.AiChatMessageService;
+import com.losgai.ai.util.ModelBuilderSpringAiWithMemo;
 import com.losgai.ai.util.OpenAiModelBuilderSpringAi;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.model.tool.ToolCallingManager;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -40,6 +56,128 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiChatMessageService aiChatMessageService;
 
     private final AiConfigMapper aiConfigMapper;
+
+    private final MybatisChatMemory mybatisChatMemory;
+
+    private final ModelBuilderSpringAiWithMemo modelBuilderSpringAiWithMemo;
+
+    /**
+     * @param aiChatParamDTO 对话参数
+     * @param sessionId      SSE会话ID
+     * @return 是否处理成功
+     * @apiNote AI对话请求，基于虚拟线程实现异步处理，SpringAI实现
+     */
+    @Override
+    public CompletableFuture<Boolean> sendQuestionAsyncWithMemo(AiChatParamDTO aiChatParamDTO, String sessionId) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (emitterManager.isOverLoad())
+                return false;
+            // 获取会话id对应的sseEmitter
+            SseEmitter emitter = emitterManager.getEmitter(sessionId);
+            // 先发送一次队列人数通知
+            emitterManager.notifyThreadCount();
+            // 没有则先创建一个sseEmitter
+            if (emitter == null) {
+                if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
+                    emitter = emitterManager.getEmitter(sessionId);
+                } else {
+                    // 创建失败，一般是由于队列已满，直接返回false
+                    return false;
+                }
+            }
+            // 最终指向的emitter对象
+            SseEmitter finalEmitter = emitter;
+            StringBuffer sb = new StringBuffer();
+            // 开始对话，返回token流
+            // 封装插入的信息对象
+            AiMessagePair aiMessagePair = new AiMessagePair();
+            aiMessagePair.setSseSessionId(sessionId);
+            aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
+
+            // 从数据库获取配置
+            AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
+            // 获取conversationId
+            Long conversationId = aiChatParamDTO.getConversationId();
+            if(conversationId == null){
+                return false;
+            }
+            Flux<ChatResponse> chatResponseFlux = modelBuilderSpringAiWithMemo.buildModelStreamWithMemo(aiConfig,
+                    "你是一个礼貌的AI助手",
+                    aiChatParamDTO.getQuestion(),
+                    "",
+                    String.valueOf(conversationId));
+            // 用于跟踪最后一个 ChatResponse
+            AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
+            chatResponseFlux.subscribe(
+                    token -> {
+                        // 获取当前输出内容片段
+                        String text = "";
+                        if (token.getResult() != null) {
+                            text = token.getResult().getOutput().getText();
+                        }
+                        if (StrUtil.isNotBlank(text)) {
+                            sb.append(text);
+                            // log.info("当前段数据:{}", text);
+                            // 换行符转义：token换行符转换成<br>
+                            text = text.replace("\n", "<br>");
+                            // 换行符转义：如果token以换行符为结尾，转换成<br>
+                            text = text.replace(" ", "&nbsp;");
+                        }
+                        // 发送返回的数据
+                        try {
+                            if (StrUtil.isNotBlank(text)) {
+                                finalEmitter.send(SseEmitter.event().data(text));
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        // 更新最后一个响应
+                        lastResponse.set(token);
+                    },
+                    // 反应式流在报错时会直接中断
+                    e -> {
+                        log.error("ai对话 流式输出报错:{}", e.getMessage());
+                        int usageCount = 0;
+                        ChatResponse chatResponse = lastResponse.get();
+                        if (chatResponse != null) {
+                            Usage usage = chatResponse.getMetadata().getUsage();
+                            usageCount = usage.getTotalTokens();
+                        } else {
+                            log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
+                        }
+                        // 更新中断的状态
+                        tryUpdateMessage(aiMessagePair,
+                                sb.toString(),
+                                true,
+                                usageCount);
+                        finalEmitter.completeWithError(e);
+                        emitterManager.removeEmitter(sessionId); // 出错时也移除
+                    }, // 错误处理
+                    () -> {// 流结束
+                        log.info("\n回答完毕！");
+                        // 从最后一个响应中获取 Token 使用信息
+                        ChatResponse chatResponse = lastResponse.get();
+                        int usageCount = 0;
+                        if (chatResponse != null) {
+                            Usage usage = chatResponse.getMetadata().getUsage();
+                            usageCount = usage.getTotalTokens();
+                        } else {
+                            log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
+                        }
+                        finalEmitter.complete();
+                        emitterManager.removeEmitter(sessionId); // 只在流结束后移除
+                        log.info("最终拼接的数据:{}", sb);
+                        log.info("token使用:{}", usageCount);
+                        // 更新正常完成的状态
+                        tryUpdateMessage(aiMessagePair,
+                                sb.toString(),
+                                false,
+                                usageCount);
+                    });
+            return true;
+        }, Executors.newVirtualThreadPerTaskExecutor());
+    }
+
 
     /**
      * 异步处理AI对话请求，基于SSE实现流式输出。
@@ -244,7 +382,7 @@ public class AiChatServiceImpl implements AiChatService {
 
             // 标志位，判断是否更新成功，防止重复插入
             AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
-            Flux<ChatResponse> chatResponseFlux = OpenAiModelBuilderSpringAi.buildModel(aiConfig,
+            Flux<ChatResponse> chatResponseFlux = OpenAiModelBuilderSpringAi.buildModelStream(aiConfig,
                     "你是一个礼貌的AI助手",
                     aiChatParamDTO.getQuestion(),
                     "");

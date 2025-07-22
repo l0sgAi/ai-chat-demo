@@ -9,7 +9,7 @@ import java.util.List;
 * @author Losgai
 * &#064;description  针对表【ai_message_pair(一轮问答记录表)】的数据库操作Mapper
 * @since  2025-06-01 12:17:12
-* &#064;Entity  generator.entity.AiMessagePair
+* &#064;Entity generator.entity.AiMessagePair
  */
 @Mapper
 public interface AiMessagePairMapper {
@@ -32,4 +32,8 @@ public interface AiMessagePairMapper {
     List<AiMessagePair> selectBySessionId(Long sessionId);
 
     void deleteBySessionId(Long id);
+
+    List<AiMessagePair> selectBySseSessionId(String conversationId);
+
+    Long getSessionIdBySse(String sessionId);
 }

@@ -156,6 +156,20 @@
         where session_id = #{id,jdbcType=BIGINT}
     </select>
 
+    <select id="selectBySseSessionId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from ai_message_pair
+        where sse_session_id = #{conversationId,jdbcType=VARCHAR}
+        order by id desc
+    </select>
+
+    <select id="getSessionIdBySse" resultType="java.lang.Long">
+        select session_id
+        from ai_message_pair
+        where sse_session_id = #{sessionId,jdbcType=VARCHAR}
+    </select>
+
     <delete id="deleteBySessionId">
         delete
         from ai_message_pair

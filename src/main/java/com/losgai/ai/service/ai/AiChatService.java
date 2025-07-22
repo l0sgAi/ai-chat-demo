@@ -19,7 +19,12 @@ public interface AiChatService {
      */
     @Deprecated
     CompletableFuture<Boolean> handleQuestionAsyncByVirtualThread(AiChatParamDTO aiChatParamDTO, String sessionId);
-    
+
+    /**
+     * 反应流式对话，带记忆
+     * */
+    CompletableFuture<Boolean> sendQuestionAsyncWithMemo(AiChatParamDTO aiChatParamDTO, String sessionId);
+
     /**
      * 反应流处理流式对话
      * */
