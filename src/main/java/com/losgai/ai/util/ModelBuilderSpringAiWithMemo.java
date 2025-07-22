@@ -7,13 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -26,27 +21,19 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 public class ModelBuilderSpringAiWithMemo {
 
+    // 注入自定义对话记忆实现
     private final MybatisChatMemory mybatisChatMemory;
 
     /**
      * @param aiConfig     传入的AI配置
      * @param systemMsg    系统提示词
      * @param userMsg      用户输入的问题
-     * @param assistantMsg 给对话提供的背景信息
      * @return Flux<ChatResponse> 反应式对话流
      * @apiNote 创建一个OpenAi模型，流式返回结果
      */
     public Flux<ChatResponse> buildModelStreamWithMemo(AiConfig aiConfig,
                                                 String systemMsg,
-                                                String userMsg,
-                                                String assistantMsg, String conversationId) {
-
-        // 为对话提供高级指令。例如，您可以使用系统消息指示生成器像某个角色一样行事，或以特定格式提供答案。
-        Message sysMessage = new SystemMessage(systemMsg);
-        // 用户输入的问题文本，它们代表问题、提示或您希望生成器响应的任何输入。
-        Message userMessage = new UserMessage(userMsg);
-        // 提供有关对话中先前交流的背景信息
-        Message assistantMessage = new AssistantMessage(assistantMsg);
+                                                String userMsg, String conversationId) {
 
         String apiDomain = aiConfig.getApiDomain().replace("/v1", "");
         OpenAiApi openAiApi = OpenAiApi.builder()
@@ -88,22 +75,16 @@ public class ModelBuilderSpringAiWithMemo {
                 retryTemplate,
                 observationRegistry);
 
-        // 提示词
-        Prompt prompt = Prompt.builder()
-                .chatOptions(chatOptions)
-                // 输入的问题，messages和content设置只能有其中一个，建议在输入问题时使用messages
-                // .content("你是谁？能做什么？之前我们在干什么？")
-                // 添加系统、用户、背景信息
-                .messages(sysMessage, userMessage, assistantMessage)
-                .build();
-
         // 创建一个ChatClient对象，用于调用模型进行带记忆对话
         ChatClient chatClient = ChatClient.builder(model)
+                // TODO: 系统提示词和用户提示词混淆解决
+                // 系统提示词
+//                .defaultSystem(systemMsg)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                 .build();
 
         // 返回反应式对话流
-        return chatClient.prompt(prompt)
+        return chatClient.prompt(userMsg)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .stream()
                 .chatResponse();

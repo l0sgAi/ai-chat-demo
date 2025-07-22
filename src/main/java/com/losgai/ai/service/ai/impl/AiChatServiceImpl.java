@@ -8,29 +8,14 @@ import com.losgai.ai.enums.AiMessageStatusEnum;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
-import com.losgai.ai.memory.MybatisChatMemory;
-import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.service.ai.AiChatMessageService;
+import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.util.ModelBuilderSpringAiWithMemo;
 import com.losgai.ai.util.OpenAiModelBuilderSpringAi;
-import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.Usage;
-import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.model.tool.ToolCallingManager;
-import org.springframework.ai.openai.OpenAiChatModel;
-import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.openai.api.OpenAiApi;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -56,8 +41,6 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiChatMessageService aiChatMessageService;
 
     private final AiConfigMapper aiConfigMapper;
-
-    private final MybatisChatMemory mybatisChatMemory;
 
     private final ModelBuilderSpringAiWithMemo modelBuilderSpringAiWithMemo;
 
@@ -102,9 +85,8 @@ public class AiChatServiceImpl implements AiChatService {
                 return false;
             }
             Flux<ChatResponse> chatResponseFlux = modelBuilderSpringAiWithMemo.buildModelStreamWithMemo(aiConfig,
-                    "你是一个礼貌的AI助手",
+                    "你是一个友善的AI助手",
                     aiChatParamDTO.getQuestion(),
-                    "",
                     String.valueOf(conversationId));
             // 用于跟踪最后一个 ChatResponse
             AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
