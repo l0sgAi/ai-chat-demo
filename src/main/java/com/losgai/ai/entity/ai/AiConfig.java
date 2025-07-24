@@ -73,6 +73,10 @@ public class AiConfig implements Serializable {
      */
     private String caseRemark;
     /**
+     * 是否启用
+     * */
+    private Integer isEnabled;
+    /**
      * 创建时间
      */
     private Date createTime;

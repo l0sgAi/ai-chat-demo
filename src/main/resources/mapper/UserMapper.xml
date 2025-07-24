@@ -5,20 +5,20 @@
 <mapper namespace="com.losgai.ai.mapper.UserMapper">
 
     <resultMap id="BaseResultMap" type="com.losgai.ai.entity.user.User">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="username" column="username" jdbcType="VARCHAR"/>
-            <result property="password" column="password" jdbcType="VARCHAR"/>
-            <result property="email" column="email" jdbcType="VARCHAR"/>
-            <result property="phone" column="phone" jdbcType="VARCHAR"/>
-            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
-            <result property="avatarUrl" column="avatar_url" jdbcType="VARCHAR"/>
-            <result property="gender" column="gender" jdbcType="TINYINT"/>
-            <result property="birthdate" column="birthdate" jdbcType="DATE"/>
-            <result property="status" column="status" jdbcType="TINYINT"/>
-            <result property="role" column="role" jdbcType="BIGINT"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-            <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="username" column="username" jdbcType="VARCHAR"/>
+        <result property="password" column="password" jdbcType="VARCHAR"/>
+        <result property="email" column="email" jdbcType="VARCHAR"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+        <result property="avatarUrl" column="avatar_url" jdbcType="VARCHAR"/>
+        <result property="gender" column="gender" jdbcType="TINYINT"/>
+        <result property="birthdate" column="birthdate" jdbcType="DATE"/>
+        <result property="status" column="status" jdbcType="TINYINT"/>
+        <result property="role" column="role" jdbcType="BIGINT"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="deleted" column="deleted" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -33,7 +33,7 @@
         select
         <include refid="Base_Column_List" />
         from user
-        where  id = #{id,jdbcType=BIGINT} 
+        where  id = #{id,jdbcType=BIGINT}
     </select>
 
     <select id="selectByUsername" resultType="com.losgai.ai.entity.user.User">
@@ -48,15 +48,27 @@
 
     <select id="existsByUsername" resultType="java.lang.Integer">
         select exists(select 1 from
-        user where deleted = 0
-        and (phone = #{userPhone,jdbcType=VARCHAR}
-        or email = #{email,jdbcType=VARCHAR}))
+            user where deleted = 0
+                   and (phone = #{userPhone,jdbcType=VARCHAR}
+                or email = #{email,jdbcType=VARCHAR}))
     </select>
 
-    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
-        delete from user
-        where  id = #{id,jdbcType=BIGINT} 
-    </delete>
+    <select id="queryByKeyWord" resultType="com.losgai.ai.entity.user.User">
+        select
+        <include refid="Base_Column_List" />
+        from user
+        where deleted = 0
+        and role = 0
+        and (phone like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
+        or email like concat('%',#{keyWord,jdbcType=VARCHAR},'%')
+        or username like concat('%',#{keyWord,jdbcType=VARCHAR},'%'))
+    </select>
+
+    <update id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        update user
+        set deleted = 1
+        where id = #{id,jdbcType=BIGINT}
+    </update>
 
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.user.User" useGeneratedKeys="true">
         insert into user
@@ -66,94 +78,95 @@
         ,status,role,create_time
         ,update_time,deleted)
         values (#{id,jdbcType=BIGINT},#{username,jdbcType=VARCHAR},#{password,jdbcType=VARCHAR}
-        ,#{email,jdbcType=VARCHAR},#{phone,jdbcType=VARCHAR},#{nickname,jdbcType=VARCHAR}
-        ,#{avatarUrl,jdbcType=VARCHAR},#{gender,jdbcType=TINYINT},#{birthdate,jdbcType=DATE}
-        ,#{status,jdbcType=TINYINT},#{role,jdbcType=BIGINT},#{createTime,jdbcType=TIMESTAMP}
-        ,#{updateTime,jdbcType=TIMESTAMP},#{deleted,jdbcType=TINYINT})
+               ,#{email,jdbcType=VARCHAR},#{phone,jdbcType=VARCHAR},#{nickname,jdbcType=VARCHAR}
+               ,#{avatarUrl,jdbcType=VARCHAR},#{gender,jdbcType=TINYINT},#{birthdate,jdbcType=DATE}
+               ,#{status,jdbcType=TINYINT},#{role,jdbcType=BIGINT},#{createTime,jdbcType=TIMESTAMP}
+               ,#{updateTime,jdbcType=TIMESTAMP},#{deleted,jdbcType=TINYINT})
     </insert>
     <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.user.User" useGeneratedKeys="true">
         insert into user
         <trim prefix="(" suffix=")" suffixOverrides=",">
-                <if test="id != null">id,</if>
-                <if test="username != null">username,</if>
-                <if test="password != null">password,</if>
-                <if test="email != null">email,</if>
-                <if test="phone != null">phone,</if>
-                <if test="nickname != null">nickname,</if>
-                <if test="avatarUrl != null">avatar_url,</if>
-                <if test="gender != null">gender,</if>
-                <if test="birthdate != null">birthdate,</if>
-                <if test="status != null">status,</if>
-                <if test="role != null">role,</if>
-                <if test="createTime != null">create_time,</if>
-                <if test="updateTime != null">update_time,</if>
-                <if test="deleted != null">deleted,</if>
+            <if test="id != null">id,</if>
+            <if test="username != null">username,</if>
+            <if test="password != null">password,</if>
+            <if test="email != null">email,</if>
+            <if test="phone != null">phone,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="avatarUrl != null">avatar_url,</if>
+            <if test="gender != null">gender,</if>
+            <if test="birthdate != null">birthdate,</if>
+            <if test="status != null">status,</if>
+            <if test="role != null">role,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="deleted != null">deleted,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-                <if test="id != null">#{id,jdbcType=BIGINT},</if>
-                <if test="username != null">#{username,jdbcType=VARCHAR},</if>
-                <if test="password != null">#{password,jdbcType=VARCHAR},</if>
-                <if test="email != null">#{email,jdbcType=VARCHAR},</if>
-                <if test="phone != null">#{phone,jdbcType=VARCHAR},</if>
-                <if test="nickname != null">#{nickname,jdbcType=VARCHAR},</if>
-                <if test="avatarUrl != null">#{avatarUrl,jdbcType=VARCHAR},</if>
-                <if test="gender != null">#{gender,jdbcType=TINYINT},</if>
-                <if test="birthdate != null">#{birthdate,jdbcType=DATE},</if>
-                <if test="status != null">#{status,jdbcType=TINYINT},</if>
-                <if test="role != null">#{role,jdbcType=BIGINT},</if>
-                <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
-                <if test="updateTime != null">#{updateTime,jdbcType=TIMESTAMP},</if>
-                <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
+            <if test="id != null">#{id,jdbcType=BIGINT},</if>
+            <if test="username != null">#{username,jdbcType=VARCHAR},</if>
+            <if test="password != null">#{password,jdbcType=VARCHAR},</if>
+            <if test="email != null">#{email,jdbcType=VARCHAR},</if>
+            <if test="phone != null">#{phone,jdbcType=VARCHAR},</if>
+            <if test="nickname != null">#{nickname,jdbcType=VARCHAR},</if>
+            <if test="avatarUrl != null">#{avatarUrl,jdbcType=VARCHAR},</if>
+            <if test="gender != null">#{gender,jdbcType=TINYINT},</if>
+            <if test="birthdate != null">#{birthdate,jdbcType=DATE},</if>
+            <if test="status != null">#{status,jdbcType=TINYINT},</if>
+            <if test="role != null">#{role,jdbcType=BIGINT},</if>
+            <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+            <if test="updateTime != null">#{updateTime,jdbcType=TIMESTAMP},</if>
+            <if test="deleted != null">#{deleted,jdbcType=TINYINT},</if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.user.User">
         update user
         <set>
-                <if test="username != null">
-                    username = #{username,jdbcType=VARCHAR},
-                </if>
-                <if test="password != null">
-                    password = #{password,jdbcType=VARCHAR},
-                </if>
-                <if test="email != null">
-                    email = #{email,jdbcType=VARCHAR},
-                </if>
-                <if test="phone != null">
-                    phone = #{phone,jdbcType=VARCHAR},
-                </if>
-                <if test="nickname != null">
-                    nickname = #{nickname,jdbcType=VARCHAR},
-                </if>
-                <if test="avatarUrl != null">
-                    avatar_url = #{avatarUrl,jdbcType=VARCHAR},
-                </if>
-                <if test="gender != null">
-                    gender = #{gender,jdbcType=TINYINT},
-                </if>
-                <if test="birthdate != null">
-                    birthdate = #{birthdate,jdbcType=DATE},
-                </if>
-                <if test="status != null">
-                    status = #{status,jdbcType=TINYINT},
-                </if>
-                <if test="role != null">
-                    role = #{role,jdbcType=BIGINT},
-                </if>
-                <if test="createTime != null">
-                    create_time = #{createTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="updateTime != null">
-                    update_time = #{updateTime,jdbcType=TIMESTAMP},
-                </if>
-                <if test="deleted != null">
-                    deleted = #{deleted,jdbcType=TINYINT},
-                </if>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null">
+                email = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname,jdbcType=VARCHAR},
+            </if>
+            <if test="avatarUrl != null">
+                avatar_url = #{avatarUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="gender != null">
+                gender = #{gender,jdbcType=TINYINT},
+            </if>
+            <if test="birthdate != null">
+                birthdate = #{birthdate,jdbcType=DATE},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=TINYINT},
+            </if>
+            <if test="role != null">
+                role = #{role,jdbcType=BIGINT},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="deleted != null">
+                deleted = #{deleted,jdbcType=TINYINT},
+            </if>
         </set>
-        where   id = #{id,jdbcType=BIGINT} 
+        where  id = #{id,jdbcType=BIGINT}
+        and deleted = 0
     </update>
     <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.user.User">
         update user
-        set 
+        set
             username =  #{username,jdbcType=VARCHAR},
             password =  #{password,jdbcType=VARCHAR},
             email =  #{email,jdbcType=VARCHAR},
@@ -167,6 +180,12 @@
             create_time =  #{createTime,jdbcType=TIMESTAMP},
             update_time =  #{updateTime,jdbcType=TIMESTAMP},
             deleted =  #{deleted,jdbcType=TINYINT}
-        where   id = #{id,jdbcType=BIGINT} 
+        where   id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <update id="updatePwd">
+        update user
+        set password = #{newPwd,jdbcType=VARCHAR}
+        where id = #{id,jdbcType=BIGINT}
     </update>
 </mapper>

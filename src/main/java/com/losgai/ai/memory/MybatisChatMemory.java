@@ -40,7 +40,7 @@ public class MybatisChatMemory implements ChatMemory {
         for (AiMessagePair pair : pairs) {
             // 只处理状态正常（完成）的一对消息
             if (pair.getStatus() != null &&
-                    pair.getStatus() == AiMessageStatusEnum.FINISHED.getCode()) {
+                    pair.getStatus() != AiMessageStatusEnum.UNKNOWN.getCode()) {
                 if (StrUtil.isNotBlank(pair.getUserContent())) {
                     messages.add(new UserMessage(pair.getUserContent()));
                 }

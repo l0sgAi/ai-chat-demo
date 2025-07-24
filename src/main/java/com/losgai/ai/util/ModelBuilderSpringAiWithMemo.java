@@ -35,13 +35,14 @@ public class ModelBuilderSpringAiWithMemo {
                                                 String systemMsg,
                                                 String userMsg, String conversationId) {
 
-        String apiDomain = aiConfig.getApiDomain().replace("/v1", "");
+        String apiDomain = aiConfig.getApiDomain();
         OpenAiApi openAiApi = OpenAiApi.builder()
                 // 填入自己的API KEY
                 .apiKey(aiConfig.getApiKey())
                 // 填入自己的API域名，如果是百炼，即为https://dashscope.aliyuncs.com/compatible-mode
                 // 注意：这里与langchain4j的配置不同，不需要在后面加/v1
                 .baseUrl(apiDomain)
+                .completionsPath("/chat/completions")
                 .build();
 
         // 模型选项

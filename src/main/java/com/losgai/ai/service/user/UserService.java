@@ -9,4 +9,6 @@ public interface UserService {
     ResultCodeEnum doLogin(LoginDto loginDto);
 
     ResultCodeEnum doRegister(User user);
+
+    User getUserInfo();
 }

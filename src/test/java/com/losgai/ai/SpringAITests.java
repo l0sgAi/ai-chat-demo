@@ -239,4 +239,23 @@ public class SpringAITests {
         countDownLatch.await(60, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void openAI(){
+        OpenAiApi openAiApi = OpenAiApi.builder()
+                .apiKey("sk-xxx")
+                .build();
+        OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
+                .model("gpt-4o-mini-2024-07-18")
+                .temperature(0.4)
+                .maxTokens(200)
+                .build();
+        ChatModel chatModel = OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(openAiChatOptions)
+                .build();
+
+        ChatResponse response = chatModel.call(
+                new Prompt("Generate the names of 5 famous pirates."));
+    }
+
 }

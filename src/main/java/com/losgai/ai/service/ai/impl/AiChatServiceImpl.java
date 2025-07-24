@@ -20,6 +20,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -81,7 +82,7 @@ public class AiChatServiceImpl implements AiChatService {
             AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
             // 获取conversationId
             Long conversationId = aiChatParamDTO.getConversationId();
-            if(conversationId == null){
+            if (conversationId == null) {
                 return false;
             }
             Flux<ChatResponse> chatResponseFlux = modelBuilderSpringAiWithMemo.buildModelStreamWithMemo(aiConfig,
@@ -90,7 +91,13 @@ public class AiChatServiceImpl implements AiChatService {
                     String.valueOf(conversationId));
             // 用于跟踪最后一个 ChatResponse
             AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
-            chatResponseFlux.subscribe(
+            // 一个中断信号
+            Sinks.One<Boolean> interruptSignal = Sinks.one();
+            // 中断标志位
+            AtomicBoolean isInterrupted = new AtomicBoolean(false);
+            chatResponseFlux
+                    .takeUntilOther(interruptSignal.asMono())
+                    .subscribe(
                     token -> {
                         // 获取当前输出内容片段
                         String text = "";
@@ -108,9 +115,17 @@ public class AiChatServiceImpl implements AiChatService {
                         // 发送返回的数据
                         try {
                             if (StrUtil.isNotBlank(text)) {
-                                finalEmitter.send(SseEmitter.event().data(text));
+                                // 中断条件
+                                if(emitterManager.getEmitter(sessionId)==null){
+                                    log.info("===>SSE已经被手动中断，执行onComplete");
+                                    isInterrupted.set(true);
+                                    interruptSignal.tryEmitValue(true);
+                                }else {
+                                    finalEmitter.send(SseEmitter.event().data(text));
+                                }
                             }
                         } catch (IOException e) {
+                            log.error("===>SSE发送异常：{}", e.getMessage());
                             throw new RuntimeException(e);
                         }
                         // 更新最后一个响应
@@ -153,7 +168,7 @@ public class AiChatServiceImpl implements AiChatService {
                         // 更新正常完成的状态
                         tryUpdateMessage(aiMessagePair,
                                 sb.toString(),
-                                false,
+                                isInterrupted.get(),
                                 usageCount);
                     });
             return true;

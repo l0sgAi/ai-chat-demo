@@ -70,4 +70,9 @@ public class UserServiceImpl implements UserService {
         StpUtil.login(user.getId(), false);
         return ResultCodeEnum.SUCCESS;
     }
+
+    @Override
+    public User getUserInfo() {
+        return userMapper.selectByPrimaryKey(StpUtil.getLoginIdAsLong());
+    }
 }

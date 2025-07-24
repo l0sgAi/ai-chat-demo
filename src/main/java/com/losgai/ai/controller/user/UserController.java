@@ -10,10 +10,7 @@ import com.losgai.ai.service.user.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 
@@ -49,6 +46,17 @@ public class UserController {
             return Result.success(tokenInfo);
         }
         return Result.error(resultCodeEnum.getMessage());
+    }
+
+    @GetMapping("/getUserInfo")
+    @Tag(name = "获取用户信息", description = "获取当前登录用户信息")
+    public Result<User> getUserInfo() {
+        if (StpUtil.isLogin()) { // 判断是否登录
+            // 从Session中获取用 户信息（如果登录时已保存）
+            User user = userService.getUserInfo();
+            return Result.success(user);
+        }
+        return Result.error("用户未登录");
     }
 
     // 当前应用独自注销 (不退出其它应用)

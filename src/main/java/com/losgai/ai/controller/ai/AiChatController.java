@@ -2,6 +2,7 @@ package com.losgai.ai.controller.ai;
 
 import com.losgai.ai.common.Result;
 import com.losgai.ai.dto.AiChatParamDTO;
+import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.service.ai.AiChatService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,8 @@ public class AiChatController {
 
     private final AiChatService aiChatService;
 
+    private final SseEmitterManager sseEmitterManager;
+
     @PostMapping("/send")
     @Tag(name = "ai会话请求",description = "通过参数获取AI对话请求，返回唯一会话id")
     public Result<String> sendQuestion(@RequestBody AiChatParamDTO aiChatParamDTO) {
@@ -40,6 +43,17 @@ public class AiChatController {
     @Tag(name = "SSE对话流获取",description = "用sessionId建立连接，获取数据流")
     public SseEmitter stream(@PathVariable String sessionId) {
         return aiChatService.getEmitter(sessionId);
+    }
+
+    @PutMapping("/stop/{sessionId}")
+    @Tag(name = "SSE对话流中断",description = "更新Redis缓存标识位，让对话响应流中断")
+    public Result<String> stop(@PathVariable String sessionId) {
+        SseEmitter emitter = sseEmitterManager.getEmitter(sessionId);
+        if (emitter != null) {
+            emitter.complete();
+        }
+        sseEmitterManager.removeEmitter(sessionId);
+        return Result.success("中断设置成功");
     }
 
 }
