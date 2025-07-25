@@ -3,6 +3,7 @@ package com.losgai.ai;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
@@ -15,9 +16,13 @@ import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.retry.support.RetryTemplate;
+import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
+import java.net.MalformedURLException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -239,23 +244,42 @@ public class SpringAITests {
         countDownLatch.await(60, TimeUnit.SECONDS);
     }
 
+    /**
+     * 测试多模态模型流式输出
+     * */
     @Test
-    public void openAI(){
+    public void openAI() throws InterruptedException {
+        // 计时器
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         OpenAiApi openAiApi = OpenAiApi.builder()
                 .apiKey("sk-xxx")
+                .baseUrl("https://dashscope.aliyuncs.com/compatible-mode")
                 .build();
         OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
-                .model("gpt-4o-mini-2024-07-18")
-                .temperature(0.4)
-                .maxTokens(200)
+                .model("qwen-omni-turbo-latest")
+                .temperature(0.9)
+                .maxTokens(2048)
                 .build();
         ChatModel chatModel = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(openAiChatOptions)
                 .build();
 
-        ChatResponse response = chatModel.call(
-                new Prompt("Generate the names of 5 famous pirates."));
+        Flux<ChatResponse> content = ChatClient.create(chatModel).prompt()
+                .user(u -> {
+                    try {
+                        u.text("这张图片的内容是什么?")
+                                .media(MimeTypeUtils.IMAGE_PNG, new UrlResource("https://img.rednet.cn/2022/08-22/9deadf91-e202-4ab3-8d67-73a32d362fbd.png"));
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .stream()
+                .chatResponse();
+
+        content.subscribe(token -> log.info("输出内容:{}", token.getResult().getOutput().getText()));
+        // 阻塞主线程最多60s 等待结果
+        countDownLatch.await(60, TimeUnit.SECONDS);
     }
 
 }
