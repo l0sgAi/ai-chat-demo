@@ -1,7 +1,7 @@
 package com.losgai.ai.common;
 
 import cn.dev33.satoken.stp.StpInterface;
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.sys.User;
 import com.losgai.ai.enums.SysRoleEnum;
 import com.losgai.ai.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;

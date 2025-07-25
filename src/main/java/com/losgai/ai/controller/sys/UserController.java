@@ -1,12 +1,12 @@
-package com.losgai.ai.controller.user;
+package com.losgai.ai.controller.sys;
 
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import com.losgai.ai.common.Result;
 import com.losgai.ai.dto.LoginDto;
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.sys.User;
 import com.losgai.ai.enums.ResultCodeEnum;
-import com.losgai.ai.service.user.UserService;
+import com.losgai.ai.service.sys.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

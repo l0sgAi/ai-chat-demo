@@ -1,10 +1,11 @@
-package com.losgai.ai.entity.user;
+package com.losgai.ai.entity.sys;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import javax.validation.constraints.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -14,6 +15,9 @@ import java.util.Date;
  */
 @Data
 public class User implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     /**
      * 用户ID（更新时校验，创建时一般由数据库自动生成）

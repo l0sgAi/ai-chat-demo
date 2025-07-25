@@ -1,6 +1,6 @@
 package com.losgai.ai.mapper;
 
-import com.losgai.ai.entity.user.User;
+import com.losgai.ai.entity.sys.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
