@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     #MySQL配置

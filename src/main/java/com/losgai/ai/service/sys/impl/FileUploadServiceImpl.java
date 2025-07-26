@@ -41,12 +41,12 @@ public class FileUploadServiceImpl implements FileUploadService {
                             .bucket(minioProperties.getBucketName())
                             .build());
             if (!found) {
-                // 创建新 bucket 叫做 'spzx-bucket'.
+                // 创建新 bucket 叫做.
                 minioClient.makeBucket(MakeBucketArgs.builder()
                         .bucket(minioProperties.getBucketName())
                         .build());
             } else {
-                System.out.println("Bucket '" + minioProperties.getBucketName() + "' 已经存在。");
+                log.info("Bucket '{}' 已经存在。", minioProperties.getBucketName());
             }
             //1.获取上传的文件名称，让每个上传文件名称唯一 uuid生成
             String dateDir = DateUtil.format(new Date(), "yyyyMMdd");
@@ -55,22 +55,22 @@ public class FileUploadServiceImpl implements FileUploadService {
             String fileName = dateDir + "/" + uuid + "_" + file.getOriginalFilename();
 
             //获取文件输入流
-            InputStream fileInputStream = file.getInputStream();
-            // 文件上传
-            minioClient.putObject(
-                    PutObjectArgs.builder().bucket(minioProperties.getBucketName()).
-                            object(fileName)
-                            .stream(fileInputStream, file.getSize(), -1)
-                            .contentType(file.getContentType())
-                            .build());
+            try(InputStream fileInputStream = file.getInputStream();){
+                // 文件上传
+                minioClient.putObject(
+                        PutObjectArgs.builder().bucket(minioProperties.getBucketName()).
+                                object(fileName)
+                                .stream(fileInputStream, file.getSize(), -1)
+                                .contentType(file.getContentType())
+                                .build());
+            }
 
             //获取上传文件在minio的路径
-            //http://192.168.200.132:9001/spzx-buket/2023-10-04_21.43.17.png
+            //http://192.168.200.132:9001/xxx-buket/2023-10-04_21.43.17.png
             String url = minioProperties.getEndpointUrl() + "/"
                     + minioProperties.getBucketName() + "/"
                     + fileName; //简单字符串拼接，但是文件名会重复
-            System.out.println("返回了图片url： " + url);
-
+            log.info("返回了图片url： {}" ,url);
             return url;
         } catch (Exception e) {
             log.error("上传文件失败：{}", e.getMessage());

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/system")
+@RequestMapping("/system/file")
 @RequiredArgsConstructor
 public class FileUploadController { //minio 文件上传接口
 

@@ -4,10 +4,12 @@ import cn.hutool.core.util.StrUtil;
 import com.losgai.ai.dto.AiChatParamDTO;
 import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.entity.ai.AiMessagePair;
+import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.enums.AiMessageStatusEnum;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
+import com.losgai.ai.mapper.AiSessionMapper;
 import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.util.ModelBuilderSpringAiWithMemo;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,8 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiConfigMapper aiConfigMapper;
 
     private final ModelBuilderSpringAiWithMemo modelBuilderSpringAiWithMemo;
+
+    private final AiSessionMapper aiSessionMapper;
 
     /**
      * @param aiChatParamDTO 对话参数
@@ -81,6 +85,7 @@ public class AiChatServiceImpl implements AiChatService {
                 return false;
             }
             Flux<ChatResponse> chatResponseFlux = modelBuilderSpringAiWithMemo.buildModelStreamWithMemo(aiConfig,
+                    aiChatParamDTO.getUrlList(),
                     "你是一个友善的AI助手",
                     aiChatParamDTO.getQuestion(),
                     String.valueOf(conversationId));
@@ -199,6 +204,10 @@ public class AiChatServiceImpl implements AiChatService {
         message.setTokens(tokenUsed);
         message.setResponseTime(Date.from(Instant.now()));
         aiMessagePairMapper.updateBySseIdSelective(message);
+        AiSession aiSession = new AiSession();
+        aiSession.setId(message.getSessionId());
+        aiSession.setLastMessageTime(message.getResponseTime());
+        aiSessionMapper.updateByPrimaryKeySelective(aiSession);
     }
 
 }

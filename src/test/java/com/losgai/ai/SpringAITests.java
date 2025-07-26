@@ -12,6 +12,7 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -247,31 +248,46 @@ public class SpringAITests {
      * 测试多模态模型流式输出
      * */
     @Test
-    public void openAI() throws InterruptedException {
+    public void openAI() throws InterruptedException, MalformedURLException {
         // 计时器
         CountDownLatch countDownLatch = new CountDownLatch(1);
         OpenAiApi openAiApi = OpenAiApi.builder()
-                .apiKey("sk-xxx")
+                .apiKey("sk-687cfa38f78d47f1a1f4972ffde8fdfe")
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode")
                 .build();
         OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
                 .model("qwen-omni-turbo-latest")
                 .temperature(0.9)
+                .topP(0.9)
+                .streamUsage(true)
                 .maxTokens(2048)
                 .build();
+
         ChatModel chatModel = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(openAiChatOptions)
                 .build();
 
-        Flux<ChatResponse> content = ChatClient.create(chatModel).prompt()
+        ChatClient chatClient = ChatClient.builder(chatModel)
+//                .defaultAdvisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
+                .build();
+
+        Media media1 = Media.builder()
+                .mimeType(MimeTypeUtils.IMAGE_PNG)
+                .data(new UrlResource("http://192.168.200.132:9001/ai-chat-multimodel-bucket/20250726/99302c548fe3460eb574d3e0ccf012b3_屏幕截图 2025-07-23 112915.png"))
+                .build();
+
+        Media media2 = Media.builder()
+                .mimeType(MimeTypeUtils.IMAGE_PNG)
+                .data(new UrlResource("http://192.168.200.132:9001/ai-chat-multimodel-bucket/20250726/5c05a35b73574c1686025dbcde80b880_屏幕截图 2025-07-23 112915.png"))
+                .build();
+
+        Media[] mediaArray = {media1,media2};
+
+        Flux<ChatResponse> content = chatClient.prompt()
                 .user(u -> {
-                    try {
-                        u.text("这张图片的内容是什么?")
-                                .media(MimeTypeUtils.IMAGE_PNG, new UrlResource("https://img.rednet.cn/2022/08-22/9deadf91-e202-4ab3-8d67-73a32d362fbd.png"));
-                    } catch (MalformedURLException e) {
-                        throw new RuntimeException(e);
-                    }
+                    u.text("这2张图片是一样的吗？")
+                            .media(mediaArray);
                 })
                 .stream()
                 .chatResponse();

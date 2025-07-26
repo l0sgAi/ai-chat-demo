@@ -35,7 +35,7 @@
     </sql>
 
     <sql id="User_Column_List">
-        id,display_name,model_name,is_default,case_tags,
+        id,display_name,model_name,model_type,is_default,case_tags,
         case_brief,case_remark,is_enabled,create_time,
         update_time
     </sql>
@@ -64,6 +64,7 @@
         from ai_config
         where is_enabled = 0
         and model_type = 0
+        or model_type = 2
     </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
@@ -71,6 +72,7 @@
         from ai_config
         where id = #{id,jdbcType=INTEGER}
     </delete>
+
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.AiConfig"
             useGeneratedKeys="true">
         insert into ai_config

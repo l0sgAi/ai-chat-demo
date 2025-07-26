@@ -2,6 +2,8 @@ package com.losgai.ai.dto;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class AiChatParamDTO {
 
@@ -29,4 +31,9 @@ public class AiChatParamDTO {
      * 模型名称
      */
     private String modelName;
+
+    /**
+     * 附带的文件url列表
+     * */
+    private List<String> urlList;
 }
