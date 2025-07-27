@@ -2,9 +2,9 @@ package com.losgai.ai.mapper;
 
 import com.losgai.ai.entity.ai.AiSession;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
 * @author Losgai
@@ -29,6 +29,7 @@ public interface AiSessionMapper {
     /**
      * 查询用户对应的所有会话
      */
-    List<AiSession> selectAllByUserId(@Param("keyword") String keyword,
-                                      @Param("userId") Long userId);
+    List<AiSession> selectAllByUserId(Long userId);
+
+    Set<Long> selectAllIdsByUserId(Long userId);
 }

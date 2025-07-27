@@ -10,6 +10,7 @@ import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
+import com.losgai.ai.mq.sender.AiMessageSender;
 import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.util.ModelBuilderSpringAiWithMemo;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,8 @@ public class AiChatServiceImpl implements AiChatService {
     private final ModelBuilderSpringAiWithMemo modelBuilderSpringAiWithMemo;
 
     private final AiSessionMapper aiSessionMapper;
+
+    private final AiMessageSender aiMessageSender;
 
     /**
      * @param aiChatParamDTO 对话参数
@@ -171,6 +174,10 @@ public class AiChatServiceImpl implements AiChatService {
                                         sb.toString(),
                                         isInterrupted.get(),
                                         usageCount);
+                                // 新增部分：消息队列发送
+                                // exchange 是交换机，决定消息往哪里发。
+                                // routingKey 是路由键，告诉交换机这条消息具体发给哪个队列。
+                                aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
                             });
             return true;
         }, Executors.newVirtualThreadPerTaskExecutor());

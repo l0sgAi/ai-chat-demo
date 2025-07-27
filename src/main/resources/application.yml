@@ -1,4 +1,14 @@
 spring:
+  rabbitmq:
+    host: 192.168.200.132
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /
+    listener:
+      simple:
+        retry:
+          max-attempts: 3
   elasticsearch:
     uris: http://192.168.200.132:9200 # 修改为你的ES地址，如果是集群，用逗号分隔
 #    username: elastic # 如果你的ES有安全认证

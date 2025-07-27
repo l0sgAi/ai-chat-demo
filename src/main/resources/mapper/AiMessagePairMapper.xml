@@ -162,6 +162,7 @@
         from ai_message_pair
         where sse_session_id = #{conversationId,jdbcType=VARCHAR}
         order by id desc
+        limit 1
     </select>
 
     <select id="getSessionIdBySse" resultType="java.lang.Long">

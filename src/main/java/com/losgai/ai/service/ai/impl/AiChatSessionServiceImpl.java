@@ -42,7 +42,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
      */
     @Override
     public List<AiSession> selectByKeyword(String keyword) {
-        return aiSessionMapper.selectAllByUserId(keyword, StpUtil.getLoginIdAsLong());
+        return aiSessionMapper.selectAllByUserId(StpUtil.getLoginIdAsLong());
     }
 
     /**
@@ -52,7 +52,6 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
     @Transactional
     public void deleteById(Long id) {
         aiSessionMapper.deleteByPrimaryKey(id);
-//        aiMessageMapper.deleteBySessionId(id);
         aiMessagePairMapper.deleteBySessionId(id);
     }
 

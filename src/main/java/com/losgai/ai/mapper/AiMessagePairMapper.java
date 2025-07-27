@@ -33,7 +33,7 @@ public interface AiMessagePairMapper {
 
     void deleteBySessionId(Long id);
 
-    List<AiMessagePair> selectBySseSessionId(String conversationId);
+    AiMessagePair selectBySseSessionId(String conversationId);
 
     Long getSessionIdBySse(String sessionId);
 }

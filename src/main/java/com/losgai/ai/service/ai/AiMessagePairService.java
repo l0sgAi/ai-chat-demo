@@ -14,7 +14,9 @@ public interface AiMessagePairService {
 
     void deleteBySessionId(Long id);
 
-    void insertAiMessagePairDoc(String indexName,List<AiMessagePair> aiMessagePairs) throws IOException;
+    boolean insertAiMessagePairDocBatch(String indexName,List<AiMessagePair> aiMessagePairs) throws IOException;
+
+    boolean insertAiMessagePairDoc(String indexName,AiMessagePair aiMessagePair) throws IOException;
 
     List<AiMessagePair> getFromGlobalSearch(String indexName,String query) throws IOException;
 }

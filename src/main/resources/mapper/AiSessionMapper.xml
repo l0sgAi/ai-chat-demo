@@ -42,14 +42,12 @@
         FROM ai_session ais
         LEFT JOIN ai_message_pair aim ON ais.id = aim.session_id
         WHERE ais.user_id = #{userId}
-        <if test="keyword != null and keyword != ''">
-            AND (
-                    ais.title LIKE CONCAT('%', #{keyword}, '%')
-                    OR aim.user_content LIKE CONCAT('%', #{keyword}, '%')
-                    OR aim.ai_content LIKE CONCAT('%', #{keyword}, '%')
-                )
-        </if>
         ORDER BY ais.last_message_time DESC
+    </select>
+
+    <select id="selectAllIdsByUserId" resultType="java.lang.Long">
+        select id from ai_session
+        where user_id = #{userId}
     </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
