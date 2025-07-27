@@ -3,6 +3,7 @@ package com.losgai.ai.service.ai;
 
 import com.losgai.ai.entity.ai.AiMessagePair;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface AiMessagePairService {
@@ -12,4 +13,8 @@ public interface AiMessagePairService {
     void addMessage(AiMessagePair aiMessage);
 
     void deleteBySessionId(Long id);
+
+    void insertAiMessagePairDoc(String indexName,List<AiMessagePair> aiMessagePairs) throws IOException;
+
+    List<AiMessagePair> getFromGlobalSearch(String indexName,String query) throws IOException;
 }

@@ -1,4 +1,8 @@
 spring:
+  elasticsearch:
+    uris: http://192.168.200.132:9200 # 修改为你的ES地址，如果是集群，用逗号分隔
+#    username: elastic # 如果你的ES有安全认证
+#    password: your_password # 对应的密码
   servlet:
     multipart:
       max-file-size: 10MB

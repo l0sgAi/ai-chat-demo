@@ -1,4 +1,4 @@
-package com.losgai.ai.common;
+package com.losgai.ai.common.sys;
 
 import com.losgai.ai.enums.ResultCodeEnum;
 import lombok.Getter;

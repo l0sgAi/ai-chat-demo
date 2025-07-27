@@ -1,4 +1,4 @@
-package com.losgai.ai.common;
+package com.losgai.ai.common.satoken;
 
 import cn.dev33.satoken.listener.SaTokenListener;
 import cn.dev33.satoken.stp.parameter.SaLoginParameter;

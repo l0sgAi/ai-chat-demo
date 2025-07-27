@@ -1,4 +1,4 @@
-package com.losgai.ai.common;
+package com.losgai.ai.common.satoken;
 
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.filter.SaServletFilter;

@@ -3,7 +3,7 @@ package com.losgai.ai.controller.ai;
 import cn.dev33.satoken.annotation.SaCheckRole;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.losgai.ai.common.Result;
+import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.service.ai.AiConfigService;

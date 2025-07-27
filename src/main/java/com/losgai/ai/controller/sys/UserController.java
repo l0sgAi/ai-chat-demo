@@ -2,7 +2,7 @@ package com.losgai.ai.controller.sys;
 
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
-import com.losgai.ai.common.Result;
+import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.dto.LoginDto;
 import com.losgai.ai.entity.sys.User;
 import com.losgai.ai.enums.ResultCodeEnum;

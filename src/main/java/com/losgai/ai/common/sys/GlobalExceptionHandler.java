@@ -1,4 +1,4 @@
-package com.losgai.ai.common;// GlobalExceptionHandler.java
+package com.losgai.ai.common.sys;// GlobalExceptionHandler.java
 
 import com.losgai.ai.enums.ErrorCode;
 import lombok.extern.slf4j.Slf4j;

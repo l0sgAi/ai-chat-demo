@@ -1,6 +1,6 @@
 package com.losgai.ai.controller.ai;
 
-import com.losgai.ai.common.Result;
+import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.dto.AiChatParamDTO;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.service.ai.AiChatService;

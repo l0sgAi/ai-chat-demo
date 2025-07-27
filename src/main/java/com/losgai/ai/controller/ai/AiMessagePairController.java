@@ -1,6 +1,6 @@
 package com.losgai.ai.controller.ai;
 
-import com.losgai.ai.common.Result;
+import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.entity.ai.AiMessagePair;
 import com.losgai.ai.service.ai.AiMessagePairService;
 import io.swagger.v3.oas.annotations.tags.Tag;

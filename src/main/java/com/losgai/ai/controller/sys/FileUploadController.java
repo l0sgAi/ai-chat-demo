@@ -1,6 +1,6 @@
 package com.losgai.ai.controller.sys;
 
-import com.losgai.ai.common.Result;
+import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.service.sys.FileUploadService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
