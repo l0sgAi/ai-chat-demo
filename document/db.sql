@@ -16,6 +16,7 @@ CREATE TABLE `ai_config` (
                              `case_tags` varchar(255) DEFAULT NULL COMMENT '标签',
                              `case_brief` varchar(255) DEFAULT NULL COMMENT '简介',
                              `case_remark` varchar(255) DEFAULT NULL COMMENT '备注',
+                             `is_enabled` tinyint(1) DEFAULT '1' COMMENT '是否启用(是0/否1)',
                              `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                              `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                              PRIMARY KEY (`id`)
