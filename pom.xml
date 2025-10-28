@@ -12,7 +12,7 @@
     <artifactId>ai</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ai</name>
-    <description>ai</description>
+    <description>ai-chat-demo</description>
     <url/>
     <licenses>
         <license/>
@@ -40,8 +40,8 @@
         <hutool.version>5.8.38</hutool.version>
         <swagger.version>2.2.31</swagger.version>
         <springboot.version>3.5.0</springboot.version>
-        <pagehelper.version>6.1.1</pagehelper.version>
         <minio.version>8.5.2</minio.version>
+        <pagehelper-spring-boot-starter.version>1.4.7</pagehelper-spring-boot-starter.version>
     </properties>
 
     <dependencies>
@@ -188,14 +188,6 @@
             <version>${springboot.version}</version>
         </dependency>
 
-        <!--分页插件-->
-        <!-- https://mvnrepository.com/artifact/com.github.pagehelper/pagehelper -->
-        <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper</artifactId>
-            <version>${pagehelper.version}</version>
-        </dependency>
-
         <!--MinIO文件上传-->
         <dependency>
             <groupId>io.minio</groupId>
@@ -207,6 +199,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
             <version>${springboot.version}</version>
+        </dependency>
+
+        <!--分页插件整合-->
+        <dependency>
+            <groupId>com.github.pagehelper</groupId>
+            <artifactId>pagehelper-spring-boot-starter</artifactId>
+            <version>${pagehelper-spring-boot-starter.version}</version>
         </dependency>
 
     </dependencies>

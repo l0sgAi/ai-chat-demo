@@ -44,14 +44,22 @@ public class AiConfigController {
             @RequestParam(required = false) String keyWord,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize) {
-        // 开启分页
-        PageHelper.startPage(pageNum, pageSize);
-        // 执行查询
-        List<AiConfig> list = aiConfigService.queryByKeyWord(keyWord);
-        // 获取分页信息
-        PageInfo<AiConfig> pageInfo = new PageInfo<>(list);
-        // 使用自定义分页返回方法
-        return Result.page(list, pageInfo.getTotal());
+        try {
+            // 开启分页
+            PageHelper.startPage(pageNum, pageSize);
+
+            // 执行查询
+            List<AiConfig> list = aiConfigService.queryByKeyWord(keyWord);
+
+            // 获取分页信息
+            PageInfo<AiConfig> pageInfo = new PageInfo<>(list);
+
+            // 返回分页结果
+            return Result.page(list, pageInfo.getTotal());
+        } finally {
+            // 确保清理分页参数
+            PageHelper.clearPage();
+        }
     }
 
     @PutMapping("/update")

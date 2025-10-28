@@ -16,12 +16,19 @@ public class GlobalCorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NotNull CorsRegistry registry) {
-                registry.addMapping("/**") // 所有路径
-                        .allowedOriginPatterns("http://localhost:5173") // 前端地址
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                registry.addMapping("/**")
+                        .allowedOrigins(
+                                "http://127.0.0.1:5173/ai-chat-demo/",
+                                "http://127.0.0.1:5173",
+                                "http://localhost:5173/ai-chat-demo/",
+                                "http://localhost:5173",
+                                "https://l0sgai.github.io",
+                                "https://l0sgai.github.io/ai-chat-demo/"
+                        )
+                        .allowedMethods("*")
                         .allowedHeaders("*")
-                        .allowCredentials(true) // 如果有 Cookie 则为 true
-                        .maxAge(3600); // 预检请求的缓存时间（秒）
+                        .allowCredentials(true)
+                        .maxAge(3600);
             }
         };
     }
