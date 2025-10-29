@@ -1,5 +1,6 @@
 package com.losgai.ai.controller.ai;
 
+import com.losgai.ai.common.sys.CursorPageInfo;
 import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.service.ai.AiChatSessionService;
@@ -29,12 +30,26 @@ public class AiChatSessionController {
     }
 
     /**
-     * 关键字查询，为空时全部查询
+     * 用户会话列表查询，按照游标分页进行查询
      */
-    @GetMapping("/select")
-    @Tag(name = "关键字查询",description = "关键字查询，为空时全部查询")
-    public Result<List<AiSession>> addSession(@RequestParam(required = false) String keyword) {
-        List<AiSession> aiSeesionList = aiChatSessionService.selectByKeyword(keyword);
+    @GetMapping("/select/page")
+    @Tag(name = "查询",description = "游标分页查询")
+    public Result<List<AiSession>> page(
+            @RequestParam(defaultValue = "2080-07-24 14:06:17") String lastMessageTime,
+            @RequestParam(defaultValue = "12") int pageSize) {
+        CursorPageInfo<AiSession> pageInfo = aiChatSessionService.selectByPage(
+                lastMessageTime,
+                pageSize);
+        return Result.page(pageInfo.getList(),pageInfo.getTotal());
+    }
+
+    /**
+     * 用户会话列表查询，初始时，只加载前12条数据
+     */
+    @GetMapping("/select/initial")
+    @Tag(name = "查询",description = "初始查询12条记录")
+    public Result<List<AiSession>> initialList() {
+        List<AiSession> aiSeesionList = aiChatSessionService.select();
         return Result.success(aiSeesionList);
     }
 

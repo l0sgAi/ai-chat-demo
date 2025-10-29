@@ -34,8 +34,8 @@ public class RedisCacheConfig {
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 // 设置value的序列化方式为JSON
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jackson2JsonRedisSerializer()))
-                // 默认缓存过期时间（例如，1天）
-                .entryTtl(Duration.ofDays(1));
+                // 默认缓存过期时间（例如，5小时）
+                .entryTtl(Duration.ofHours(5));
 
         // 2. 针对 userInfo 缓存进行特定配置
         RedisCacheConfiguration userInfoCacheConfig = defaultConfig

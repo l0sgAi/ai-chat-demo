@@ -153,7 +153,33 @@
         select
         <include refid="Base_Column_List" />
         from ai_message_pair
-        where session_id = #{id,jdbcType=BIGINT}
+        where session_id = #{sessionId,jdbcType=BIGINT}
+        order by id desc
+        limit 5
+    </select>
+
+    <select id="selectBySessionIdLimit" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from ai_message_pair
+        where session_id = #{sessionId,jdbcType=BIGINT}
+        order by id desc
+        limit 5
+    </select>
+
+    <select id="selectBySessionIdPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from ai_message_pair
+        where session_id = #{sessionId,jdbcType=BIGINT}
+        and id &lt; #{lastId,jdbcType=BIGINT}
+        order by id desc
+        limit #{pageSize}
+    </select>
+
+    <select id="countBySessionId" resultType="java.lang.Long">
+        select count(1)
+        from ai_message_pair
     </select>
 
     <select id="selectBySseSessionId" resultMap="BaseResultMap">

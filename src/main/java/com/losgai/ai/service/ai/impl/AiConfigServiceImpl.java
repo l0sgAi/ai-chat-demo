@@ -6,6 +6,8 @@ import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.service.ai.AiConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class AiConfigServiceImpl implements AiConfigService {
 
     @Override
     @Transactional
+    @CacheEvict("models")
     public ResultCodeEnum add(AiConfig aiConfig) {
         aiConfig.setCreateTime(Date.from(Instant.now()));
         aiConfig.setUpdateTime(Date.from(Instant.now()));
@@ -39,6 +42,7 @@ public class AiConfigServiceImpl implements AiConfigService {
     }
 
     @Override
+    @CacheEvict("models")
     public ResultCodeEnum deleteById(Long id) {
         aiConfigMapper.deleteByPrimaryKey(id);
         return ResultCodeEnum.SUCCESS;
@@ -46,6 +50,7 @@ public class AiConfigServiceImpl implements AiConfigService {
 
     @Override
     @Transactional
+    @CacheEvict("models")
     public ResultCodeEnum update(AiConfig aiConfig) {
         aiConfigMapper.updateByPrimaryKeySelective(aiConfig);
         if(aiConfig.getIsDefault()==1){
@@ -56,6 +61,7 @@ public class AiConfigServiceImpl implements AiConfigService {
     }
 
     @Override
+    @Cacheable("models")
     public List<AiConfig> getModels() {
         return aiConfigMapper.selectModelList();
     }

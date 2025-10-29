@@ -36,4 +36,10 @@ public interface AiMessagePairMapper {
     AiMessagePair selectBySseSessionId(String conversationId);
 
     Long getSessionIdBySse(String sessionId);
+
+    List<AiMessagePair> selectBySessionIdLimit(Long sessionId);
+
+    List<AiMessagePair> selectBySessionIdPage(Long sessionId, Long lastId, int pageSize);
+
+    long countBySessionId(Long sessionId);
 }

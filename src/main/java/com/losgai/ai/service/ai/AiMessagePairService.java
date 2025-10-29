@@ -1,14 +1,13 @@
 package com.losgai.ai.service.ai;
 
 
+import com.losgai.ai.common.sys.CursorPageInfo;
 import com.losgai.ai.entity.ai.AiMessagePair;
 
 import java.io.IOException;
 import java.util.List;
 
 public interface AiMessagePairService {
-
-    List<AiMessagePair> selectBySessionId(Long sessionId);
 
     void addMessage(AiMessagePair aiMessage);
 
@@ -19,4 +18,8 @@ public interface AiMessagePairService {
     boolean insertAiMessagePairDoc(String indexName,AiMessagePair aiMessagePair) throws IOException;
 
     List<AiMessagePair> getFromGlobalSearch(String indexName,String query) throws IOException;
+
+    List<AiMessagePair> selectBySessionIdInitial(Long sessionId);
+
+    CursorPageInfo<AiMessagePair> selectBySessionIdPage(Long sessionId, Long lastId, int pageSize);
 }

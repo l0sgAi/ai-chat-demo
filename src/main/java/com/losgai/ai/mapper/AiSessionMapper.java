@@ -32,4 +32,8 @@ public interface AiSessionMapper {
     List<AiSession> selectAllByUserId(Long userId);
 
     Set<Long> selectAllIdsByUserId(Long userId);
+
+    List<AiSession> selectAllByUserIdPage(long userId,String lastMessageTime, int pageSize);
+
+    Long countSessionByUserId(long userId);
 }

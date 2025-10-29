@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.losgai.ai.common.sys.CursorPageInfo;
 import com.losgai.ai.entity.ai.AiMessagePair;
 import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.mapper.AiMessagePairMapper;
@@ -14,6 +15,8 @@ import com.losgai.ai.service.ai.AiMessagePairService;
 import com.losgai.ai.util.ElasticsearchIndexUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,13 +40,30 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
 
     private final ElasticsearchClient esClient;
 
+
     @Override
-    public List<AiMessagePair> selectBySessionId(Long sessionId) {
-        return aiMessagePairMapper.selectBySessionId(sessionId);
+    @Cacheable(value = "aiMessagePairCache",key = "#sessionId")
+    public List<AiMessagePair> selectBySessionIdInitial(Long sessionId) {
+        return aiMessagePairMapper.selectBySessionIdLimit(sessionId);
     }
 
     @Override
     @Transactional
+    public CursorPageInfo<AiMessagePair> selectBySessionIdPage(Long sessionId,
+                                                               Long lastId,
+                                                               int pageSize) {
+        List<AiMessagePair> aiMessagePairs = aiMessagePairMapper.selectBySessionIdPage(
+                sessionId,
+                lastId,
+                pageSize
+                );
+        long total = aiMessagePairMapper.countBySessionId(sessionId);
+        return new CursorPageInfo<>(aiMessagePairs,total);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "aiMessagePairCache",key = "#aiMessage.getSessionId()")
     public void addMessage(AiMessagePair aiMessage) {
         Date messageDate = Date.from(Instant.now());
         aiMessage.setCreateTime(messageDate);
@@ -56,6 +76,7 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
     }
 
     @Override
+    @CacheEvict(value = "aiMessagePairCache",key = "#id")
     public void deleteBySessionId(Long id) {
         aiMessagePairMapper.deleteBySessionId(id);
     }

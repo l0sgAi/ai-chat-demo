@@ -1,7 +1,9 @@
 package com.losgai.ai.controller.ai;
 
+import com.losgai.ai.common.sys.CursorPageInfo;
 import com.losgai.ai.common.sys.Result;
 import com.losgai.ai.entity.ai.AiMessagePair;
+import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.global.EsConstants;
 import com.losgai.ai.service.ai.AiMessagePairService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,10 +29,24 @@ public class AiMessagePairController {
         return Result.success("新增消息成功！");
     }
     
-    @GetMapping("/select/{sessionId}")
-    @Tag(name = "查询会话消息",description = "根据会话id，查询会话消息")
-    public Result<List<AiMessagePair>> getAiChatMessage(@PathVariable("sessionId") Long sessionId) {
-        List<AiMessagePair> aiMessagePairs = aiMessagePairService.selectBySessionId(sessionId);
+    @GetMapping("/page")
+    @Tag(name = "查询会话消息",description = "根据会话id，游标分页查询会话消息")
+    public Result<List<AiMessagePair>> page(
+            @RequestParam Long sessionId,
+            @RequestParam(defaultValue = "0") Long lastId,
+            @RequestParam(defaultValue = "5") int pageSize
+    ) {
+        CursorPageInfo<AiMessagePair> pageInfo = aiMessagePairService.selectBySessionIdPage(
+                sessionId,
+                lastId,
+                pageSize);
+        return Result.page(pageInfo.getList(),pageInfo.getTotal());
+    }
+
+    @GetMapping("/select/initial/{sessionId}")
+    @Tag(name = "查询会话消息",description = "根据会话id，查询最后5条问答记录")
+    public Result<List<AiMessagePair>> getAiChatMessageInitial(@PathVariable("sessionId") Long sessionId) {
+        List<AiMessagePair> aiMessagePairs = aiMessagePairService.selectBySessionIdInitial(sessionId);
         return Result.success(aiMessagePairs);
     }
     

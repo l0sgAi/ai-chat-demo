@@ -1,12 +1,15 @@
 package com.losgai.ai.service.ai.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.losgai.ai.common.sys.CursorPageInfo;
 import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
 import com.losgai.ai.service.ai.AiChatSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,8 +44,26 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
      * 根据keyword查询
      */
     @Override
-    public List<AiSession> selectByKeyword(String keyword) {
+    public List<AiSession> select() {
         return aiSessionMapper.selectAllByUserId(StpUtil.getLoginIdAsLong());
+    }
+
+    /**
+     * 根据keyword，游标分页查询
+     */
+    @Override
+    @Transactional
+    public CursorPageInfo<AiSession> selectByPage(
+            String lastMessageTime,
+            int pageSize) {
+        long userId = StpUtil.getLoginIdAsLong();
+        List<AiSession> aiSessions = aiSessionMapper
+                .selectAllByUserIdPage(
+                        userId,
+                        lastMessageTime,
+                        pageSize);
+        Long total = aiSessionMapper.countSessionByUserId(userId);
+        return new CursorPageInfo<>(aiSessions,total);
     }
 
     /**
@@ -54,5 +75,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
         aiSessionMapper.deleteByPrimaryKey(id);
         aiMessagePairMapper.deleteBySessionId(id);
     }
+
+
 
 }

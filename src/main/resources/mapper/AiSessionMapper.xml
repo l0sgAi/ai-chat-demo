@@ -43,10 +43,34 @@
         LEFT JOIN ai_message_pair aim ON ais.id = aim.session_id
         WHERE ais.user_id = #{userId}
         ORDER BY ais.last_message_time DESC
+        LIMIT 12
+    </select>
+
+    <select id="selectAllByUserIdPage" resultType="com.losgai.ai.entity.ai.AiSession">
+        SELECT DISTINCT ais.id as id,
+                        ais.title as title,
+                        ais.is_favorite as isFavorite,
+                        ais.created_time as createdTime,
+                        ais.last_message_time as lastMessageTime,
+                        ais.user_id as userId,
+                        ais.model_id as modelId,
+                        ais.tags as tags,
+                        ais.summary as summary
+        FROM ai_session ais
+                 LEFT JOIN ai_message_pair aim ON ais.id = aim.session_id
+        WHERE ais.user_id = #{userId}
+        AND ais.last_message_time &lt; #{lastMessageTime}
+        ORDER BY ais.last_message_time DESC
+        LIMIT #{pageSize}
     </select>
 
     <select id="selectAllIdsByUserId" resultType="java.lang.Long">
         select id from ai_session
+        where user_id = #{userId}
+    </select>
+
+    <select id="countSessionByUserId" resultType="java.lang.Long">
+        select count(1) from ai_session
         where user_id = #{userId}
     </select>
 
