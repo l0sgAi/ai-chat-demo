@@ -63,7 +63,6 @@
         </dependency>
 
         <!--SpringAI-->
-        <!-- https://mvnrepository.com/artifact/org.springframework.ai/spring-ai-client-chat -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-client-chat</artifactId>
@@ -74,6 +73,27 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
+        <!--SpringAI ES整合-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-elasticsearch</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
+        <!--SpringAI 矢量数据库-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-advisors-vector-store</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
+        <!--SpringAI RAG-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-rag</artifactId>
             <version>${spring-ai.version}</version>
         </dependency>
 

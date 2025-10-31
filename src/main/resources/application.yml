@@ -1,4 +1,11 @@
 spring:
+  ai:
+    vectorstore:
+      elasticsearch:
+        initialize-schema: true
+        index-name: test_vector
+        dimensions: 1536
+        similarity: cosine
   rabbitmq:
     host: 192.168.200.132
     port: 5672

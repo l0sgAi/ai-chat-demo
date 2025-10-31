@@ -29,7 +29,7 @@ public class ElasticsearchConfig {
         // 1. 创建 RestClient（无认证、无 SSL）
         RestClient restClient = org.elasticsearch.client.RestClient.builder(
                 // 这里换成自己的ES服务器地址，如果是本地部署，直接localhost即可
-                new HttpHost(host,port)).build();
+                new HttpHost(host, port)).build();
 
         // 2. 使用 Jackson 映射器创建 Transport 层
         RestClientTransport transport = new RestClientTransport(
@@ -38,5 +38,15 @@ public class ElasticsearchConfig {
 
         // 3. 创建 Elasticsearch Java 客户端
         return new ElasticsearchClient(transport);
+    }
+
+    @Bean
+    public RestClient restClient() {
+        return RestClient.builder(new HttpHost(
+                        // 这里换成自己的ES服务器地址，如果是本地部署，直接localhost即可
+                        "192.168.200.132",
+                        9200,
+                        "http"))
+                .build();
     }
 }

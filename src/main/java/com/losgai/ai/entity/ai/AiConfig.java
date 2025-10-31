@@ -7,7 +7,7 @@ import java.util.Date;
 
 /**
  * AI配置信息表
- * &#064;TableName  ai_config
+ * TableName  ai_config
  */
 @Data
 public class AiConfig implements Serializable {

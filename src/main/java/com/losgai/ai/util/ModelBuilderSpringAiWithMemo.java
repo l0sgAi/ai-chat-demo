@@ -41,7 +41,8 @@ public class ModelBuilderSpringAiWithMemo {
     public Flux<ChatResponse> buildModelStreamWithMemo(AiConfig aiConfig,
                                                        List<String> urlList,
                                                        String systemMsg,
-                                                       String userMsg, String conversationId) {
+                                                       String userMsg,
+                                                       String conversationId) {
 
         OpenAiApi openAiApi = OpenAiApi.builder()
                 // 填入自己的API KEY
