@@ -19,8 +19,17 @@ import java.util.List;
 public class RabbitMQAiMessageConfig {
 
     public static final String EXCHANGE_NAME = "ai.exchange";
+
+    // ai消息同步队列和路由
     public static final String QUEUE_NAME = "ai.message.queue";
     public static final String ROUTING_KEY = "ai.message";
+
+    // 向量化消息同步队列和路由：多个索引和向量
+    public static final String VECTOR_QUEUE_NAME = "vector.queue";
+    public static final String VECTOR_ROUTING_KEY = "vector.message";
+    // 向量化消息同步队列和路由：单个索引和向量
+    public static final String VECTOR_SINGLE_QUEUE_NAME = "vector.single.queue";
+    public static final String VECTOR_SINGLE_ROUTING_KEY = "vector.single.message";
 
     // 默认的直接交换机
     @Bean
@@ -38,6 +47,30 @@ public class RabbitMQAiMessageConfig {
     @Bean
     public Binding binding(Queue queue, Exchange exchange) {
         return BindingBuilder.bind(queue).to((DirectExchange) exchange).with(ROUTING_KEY);
+    }
+
+    // 向量化队列
+    @Bean
+    public Queue vectorQueue() {
+        return QueueBuilder.durable(VECTOR_QUEUE_NAME).build();
+    }
+
+    // 绑定队列和交换机
+    @Bean
+    public Binding vectorBinding(Queue vectorQueue, Exchange exchange) {
+        return BindingBuilder.bind(vectorQueue).to((DirectExchange) exchange).with(VECTOR_ROUTING_KEY);
+    }
+
+    // 向量化队列:单个
+    @Bean
+    public Queue vectorSingleQueue() {
+        return QueueBuilder.durable(VECTOR_SINGLE_QUEUE_NAME).build();
+    }
+
+    // 绑定队列和交换机：单个
+    @Bean
+    public Binding vectorSingleBinding(Queue vectorSingleQueue, Exchange exchange) {
+        return BindingBuilder.bind(vectorSingleQueue).to((DirectExchange) exchange).with(VECTOR_SINGLE_ROUTING_KEY);
     }
 
     // 反序列化配置

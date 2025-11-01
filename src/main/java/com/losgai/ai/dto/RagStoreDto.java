@@ -1,5 +1,6 @@
-package com.losgai.ai.entity.ai;
+package com.losgai.ai.dto;
 
+import cn.dev33.satoken.stp.StpUtil;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -14,7 +15,7 @@ import java.util.Date;
 * @TableName rag_store
 */
 @Data
-public class RagStore implements Serializable {
+public class RagStoreDto implements Serializable {
 
     /**
     * 文档唯一标识ID
@@ -56,11 +57,11 @@ public class RagStore implements Serializable {
     /**
     * 使用的向量模型在ai_config表中对应的id
     */
-    private Integer embeddingModel = 2;
+    private Integer embeddingModel;
     /**
     * 向量维度
     */
-    private Integer vectorDimension = 1536;
+    private Integer vectorDimension;
     /**
     * 文档块索引（0表示完整文档，>0表示分块）
     */
@@ -118,5 +119,10 @@ public class RagStore implements Serializable {
     */
     @NotNull(message="[逻辑删除：0=正常，1=已删除]不能为空")
     private Integer deleted;
+
+    /**
+     * 是否直接嵌入向量数据库
+     * */
+    private Boolean isEmbedding = false;
 
 }

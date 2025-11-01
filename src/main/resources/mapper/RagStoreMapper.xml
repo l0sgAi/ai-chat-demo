@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.losgai.ai.mapper.RagStoreMapper">
+
+    <resultMap id="BaseResultMap" type="com.losgai.ai.entity.ai.RagStore">
+        <id property="id" column="id"/>
+        <result property="docId" column="doc_id"/>
+        <result property="title" column="title"/>
+        <result property="indexName" column="index_name"/>
+        <result property="content" column="content"/>
+        <result property="contentSummary" column="content_summary"/>
+        <result property="embeddingModel" column="embedding_model"/>
+        <result property="vectorDimension" column="vector_dimension"/>
+        <result property="chunkIndex" column="chunk_index"/>
+        <result property="chunkTotal" column="chunk_total"/>
+        <result property="parentDocId" column="parent_doc_id"/>
+        <result property="docType" column="doc_type"/>
+        <result property="fileSize" column="file_size"/>
+        <result property="language" column="language"/>
+        <result property="userId" column="user_id"/>
+        <result property="status" column="status"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="createdTime" column="created_time"/>
+        <result property="updatedTime" column="updated_time"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,doc_id,title,index_name,content,content_summary,embedding_model,
+        vector_dimension,chunk_index,chunk_total,parent_doc_id,doc_type,
+        file_size,language,user_id,status,error_message,
+        created_time,updated_time,deleted
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from rag_store
+        where id = #{id}
+    </select>
+
+    <select id="query" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from rag_store
+        where deleted = 0
+        and updated_time &lt; #{lastUpdateTime}
+        <if test="keyword != null">
+            and (
+            title like concat('%',#{keyword},'%')
+            or index_name like concat('%',#{keyword},'%')
+            or content_summary like concat('%',#{keyword},'%')
+            )
+        </if>
+        <if test="startTime != null">
+            and created_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and created_time &lt;= #{endTime}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        order by updated_time desc
+        limit #{pageSize}
+    </select>
+
+    <select id="selectByIds" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from rag_store
+        where deleted = 0
+        and id in
+        <foreach item="id" collection="ids" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectCount" resultType="java.lang.Long">
+        select count(1) from rag_store
+        where deleted = 0
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete
+        from rag_store
+        where id = #{id}
+    </delete>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.dto.RagStoreDto"
+            useGeneratedKeys="true">
+        insert into rag_store
+        (id, doc_id, title, index_name,content, content_summary, embedding_model,
+         vector_dimension, chunk_index, chunk_total, parent_doc_id, doc_type,
+         file_size, language, user_id, status, error_message,
+         created_time, updated_time, deleted)
+        values (#{id}, #{docId}, #{title},#{indexName}, #{content}, #{contentSummary}, #{embeddingModel},
+                #{vectorDimension}, #{chunkIndex}, #{chunkTotal}, #{parentDocId}, #{docType},
+                #{fileSize}, #{language}, #{userId}, #{status}, #{errorMessage},
+                #{createdTime}, #{updatedTime}, #{deleted})
+    </insert>
+
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.entity.ai.RagStore"
+            useGeneratedKeys="true">
+        insert into rag_store
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="docId != null">doc_id,</if>
+            <if test="title != null">title,</if>
+            <if test="indexName != null">index_name,</if>
+            <if test="content != null">content,</if>
+            <if test="contentSummary != null">content_summary,</if>
+            <if test="embeddingModel != null">embedding_model,</if>
+            <if test="vectorDimension != null">vector_dimension,</if>
+            <if test="chunkIndex != null">chunk_index,</if>
+            <if test="chunkTotal != null">chunk_total,</if>
+            <if test="parentDocId != null">parent_doc_id,</if>
+            <if test="docType != null">doc_type,</if>
+            <if test="fileSize != null">file_size,</if>
+            <if test="language != null">language,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="status != null">status,</if>
+            <if test="errorMessage != null">error_message,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+            <if test="deleted != null">deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="docId != null">#{docId},</if>
+            <if test="title != null">#{title},</if>
+            <if test="indexName != null">#{indexName},</if>
+            <if test="content != null">#{content},</if>
+            <if test="contentSummary != null">#{contentSummary},</if>
+            <if test="embeddingModel != null">#{embeddingModel},</if>
+            <if test="vectorDimension != null">#{vectorDimension},</if>
+            <if test="chunkIndex != null">#{chunkIndex},</if>
+            <if test="chunkTotal != null">#{chunkTotal},</if>
+            <if test="parentDocId != null">#{parentDocId},</if>
+            <if test="docType != null">#{docType},</if>
+            <if test="fileSize != null">#{fileSize},</if>
+            <if test="language != null">#{language},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="errorMessage != null">#{errorMessage},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+            <if test="deleted != null">#{deleted},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.losgai.ai.entity.ai.RagStore">
+        update rag_store
+        <set>
+            <if test="docId != null">
+                doc_id = #{docId},
+            </if>
+            <if test="title != null">
+                title = #{title},
+            </if>
+            <if test="indexName != null">
+                index_name = #{indexName},
+            </if>
+            <if test="content != null">
+                content = #{content},
+            </if>
+            <if test="contentSummary != null">
+                content_summary = #{contentSummary},
+            </if>
+            <if test="embeddingModel != null">
+                embedding_model = #{embeddingModel},
+            </if>
+            <if test="vectorDimension != null">
+                vector_dimension = #{vectorDimension},
+            </if>
+            <if test="chunkIndex != null">
+                chunk_index = #{chunkIndex},
+            </if>
+            <if test="chunkTotal != null">
+                chunk_total = #{chunkTotal},
+            </if>
+            <if test="parentDocId != null">
+                parent_doc_id = #{parentDocId},
+            </if>
+            <if test="docType != null">
+                doc_type = #{docType},
+            </if>
+            <if test="fileSize != null">
+                file_size = #{fileSize},
+            </if>
+            <if test="language != null">
+                language = #{language},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="errorMessage != null">
+                error_message = #{errorMessage},
+            </if>
+            <if test="createdTime != null">
+                created_time = #{createdTime},
+            </if>
+            <if test="updatedTime != null">
+                updated_time = #{updatedTime},
+            </if>
+            <if test="deleted != null">
+                deleted = #{deleted},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.losgai.ai.entity.ai.RagStore">
+        update rag_store
+        set doc_id           = #{docId},
+            title            = #{title},
+            index_name       = #{indexName},
+            content          = #{content},
+            content_summary  = #{contentSummary},
+            embedding_model  = #{embeddingModel},
+            vector_dimension = #{vectorDimension},
+            chunk_index      = #{chunkIndex},
+            chunk_total      = #{chunkTotal},
+            parent_doc_id    = #{parentDocId},
+            doc_type         = #{docType},
+            file_size        = #{fileSize},
+            language         = #{language},
+            user_id          = #{userId},
+            status           = #{status},
+            error_message    = #{errorMessage},
+            created_time     = #{createdTime},
+            updated_time     = #{updatedTime},
+            deleted          = #{deleted}
+        where id = #{id}
+    </update>
+</mapper>
