@@ -92,7 +92,6 @@ public class AiChatServiceImpl implements AiChatService {
             Flux<ChatResponse> chatResponseFlux = chatClientFactory.streamChat(
                     aiConfig,
                     aiChatParamDTO.getUrlList(),
-                    "你是一个友善的AI助手",
                     aiChatParamDTO.getQuestion(),
                     String.valueOf(conversationId));
             // 用于跟踪最后一个 ChatResponse

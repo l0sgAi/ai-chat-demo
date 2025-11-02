@@ -94,6 +94,7 @@ public class ChatClientFactory {
                 .build();
 
         return ChatClient.builder(chatModel)
+                .defaultSystem("你是一个由losgai开发的、友善的AI助手，请保持你的语气平和、耐心、礼貌。")
                 .build();
     }
 
@@ -103,7 +104,6 @@ public class ChatClientFactory {
     public Flux<ChatResponse> streamChat(
             AiConfig aiConfig,
             List<String> urlList,
-            String systemMsg,
             String userMsg,
             String conversationId) {
 

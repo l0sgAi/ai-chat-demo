@@ -105,7 +105,8 @@ public class RagServiceImpl implements RagService {
         return indices.valueBody().stream()
                 .map(IndicesRecord::index)
                 .filter(StrUtil::isNotBlank)
-                .filter(name -> !name.startsWith(".")) // ✅ 过滤系统索引
+                // 过滤系统索引 和向量索引
+                .filter(name -> !name.startsWith(".") && name.contains("vector"))
                 .collect(Collectors.toList());
     }
 
