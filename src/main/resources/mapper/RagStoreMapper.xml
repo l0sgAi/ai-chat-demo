@@ -88,6 +88,14 @@
         from rag_store
         where id = #{id}
     </delete>
+    <delete id="deleteByPrimaryKeys">
+        delete
+        from rag_store
+        where id in
+        <foreach item="id" collection="ids" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
 
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.losgai.ai.dto.RagStoreDto"
             useGeneratedKeys="true">
@@ -235,5 +243,21 @@
             updated_time     = #{updatedTime},
             deleted          = #{deleted}
         where id = #{id}
+    </update>
+    <update id="updateStatus">
+        update rag_store
+        set status = #{status}
+        where id = #{id}
+    </update>
+
+    <update id="updateStatusBatch">
+        update rag_store
+        set
+            status = #{status},
+            error_message = #{e}
+        where id in
+        <foreach item="item" collection="ids" separator="," open="(" close=")" index="index">
+            #{item}
+        </foreach>
     </update>
 </mapper>

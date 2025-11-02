@@ -3,12 +3,10 @@ package com.losgai.ai.mq.sender;
 import com.losgai.ai.dto.RagStoreDto;
 import com.losgai.ai.entity.ai.AiMessagePair;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.document.Document;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +26,7 @@ public class AiMessageSender {
     public void sendEmbeddingMessage(
             String exchange,
             String routingKey,
-            Map<String, List<Document>> message) {
+            List<Long> message) {
         rabbitTemplate.convertAndSend(exchange, routingKey, message);
     }
 

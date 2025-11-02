@@ -69,6 +69,14 @@ public class RagController {
     }
 
     @SaCheckRole("admin")
+    @PostMapping ("/deleteBatch")
+    @Tag(name = "删除会话消息",description = "根据会话ids，删除会话消息")
+    public Result<String> deleteBatch(@RequestBody List<Long> ids) {
+        ragService.deleteByDocIdBatch(ids);
+        return Result.success("删除成功！");
+    }
+
+    @SaCheckRole("admin")
     @DeleteMapping("/delete")
     @Tag(name = "删除会话消息",description = "根据会话id，删除会话消息")
     public Result<String> delete(@RequestParam Long id) throws IOException {

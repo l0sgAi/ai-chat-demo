@@ -4,8 +4,10 @@ import com.losgai.ai.entity.sys.MinioProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
+@EnableCaching
 @EnableConfigurationProperties(MinioProperties.class)
 public class AiApplication {
 

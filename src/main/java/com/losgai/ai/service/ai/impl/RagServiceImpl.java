@@ -1,10 +1,13 @@
 package com.losgai.ai.service.ai.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.util.StrUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.cat.IndicesResponse;
 import co.elastic.clients.elasticsearch.cat.indices.IndicesRecord;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.DeleteRequest;
 import co.elastic.clients.elasticsearch.core.DeleteResponse;
 import com.losgai.ai.common.sys.CursorPageInfo;
@@ -16,7 +19,6 @@ import com.losgai.ai.mq.sender.AiMessageSender;
 import com.losgai.ai.service.ai.RagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.document.Document;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -29,7 +31,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static com.losgai.ai.util.FileUtils.*;
+import static com.losgai.ai.util.FileUtils.detectLanguage;
+import static com.losgai.ai.util.FileUtils.generateSummary;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +64,7 @@ public class RagServiceImpl implements RagService {
     }
 
     @Override
-    @CacheEvict("IndexNames")
+    @CacheEvict(value = "IndexNames", allEntries = true)
     public void add(RagStoreDto rag) {
 
         if (rag.getDeleted() == null || rag.getDeleted() != 0) {
@@ -101,17 +104,17 @@ public class RagServiceImpl implements RagService {
         // 提取 index 字段（索引名称）
         return indices.valueBody().stream()
                 .map(IndicesRecord::index)
-                .filter(name -> name != null && !name.isBlank())
+                .filter(StrUtil::isNotBlank)
                 .filter(name -> !name.startsWith(".")) // ✅ 过滤系统索引
                 .collect(Collectors.toList());
     }
 
     @Override
-    @CacheEvict("IndexNames")
+    @CacheEvict(value = "IndexNames", allEntries = true)
     public void deleteByDocId(Long id) throws IOException {
-        ragStoreMapper.deleteByPrimaryKey(id);
         RagStore ragStore = ragStoreMapper.selectByPrimaryKey(id);
         String indexName = ragStore.getIndexName();
+        ragStoreMapper.deleteByPrimaryKey(id);
         if (ragStore.getStatus() == 1) {
             // 删除索引中的向量数据
             // 1. 构建删除请求
@@ -137,28 +140,66 @@ public class RagServiceImpl implements RagService {
     }
 
     @Override
-    public void embedding(List<Long> ids) {
-        // 1.查出id对应的列表
-        List<RagStore> ragStores = ragStoreMapper.selectByIds(ids);
-        // 2. 封装成Document、按照RagStore的indexName进行分组
-        Map<String, List<Document>> groupedDocuments = ragStores.stream()
+    @CacheEvict(value = "IndexNames", allEntries = true)
+    public void deleteByDocIdBatch(List<Long> ids) {
+        List<RagStore> list = ragStoreMapper.selectByIds(ids);
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+
+        // 1. 按 indexName 分组 -> Map<String, List<Long>>
+        Map<String, List<Long>> groupedIndexName = list.stream()
                 .collect(Collectors.groupingBy(
-                        RagStore::getIndexName, // 按 indexName 分组
-                        Collectors.mapping(     // 每个分组元素转换成 Document
-                                ragStore -> Document.builder()
-                                        .text(ragStore.getContent())
-                                        .metadata(Map.of(
-                                                "title", ragStore.getTitle(),
-                                                "doc_id", ragStore.getDocId()))
-                                        .build(),
-                                Collectors.toList()
-                        )
+                        RagStore::getIndexName,
+                        Collectors.mapping(RagStore::getId, Collectors.toList())
                 ));
-        // 3. 发到消息队列中，遍历分组，对每个分组进行向量化
+
+        // 2. 先删除数据库记录
+        ragStoreMapper.deleteByPrimaryKeys(ids);
+
+        // 3. 再删除 Elasticsearch 中的文档
+        groupedIndexName.forEach((indexName, docIds) -> {
+            try {
+                // 构造 BulkRequest
+                BulkRequest.Builder bulkBuilder = new BulkRequest.Builder();
+
+                for (Long docId : docIds) {
+                    bulkBuilder.operations(op -> op
+                            .delete(d -> d
+                                    .index(indexName)
+                                    .id(String.valueOf(docId))
+                            )
+                    );
+                }
+
+                // 执行批量删除
+                BulkResponse bulkResponse = esClient.bulk(bulkBuilder.build());
+
+                // 检查是否有失败项
+                if (bulkResponse.errors()) {
+                    log.error("ES 批量删除出现部分失败: {}", bulkResponse.items().stream()
+                            .filter(i -> i.error() != null)
+                            .map(item -> item.error().reason())
+                            .collect(Collectors.joining(", ")));
+                } else {
+                    log.info("ES 批量删除成功，共 {} 条，索引：{}", docIds.size(), indexName);
+                }
+
+            } catch (Exception e) {
+                log.error("ES 批量删除失败，索引={}，错误={}", indexName, e.getMessage(), e);
+            }
+        });
+    }
+
+
+    @Override
+    @CacheEvict(value = "IndexNames", allEntries = true)
+    public void embedding(List<Long> ids) {
+        // 2. 发到消息队列中，遍历分组，对每个分组进行向量化
         aiMessageSender.sendEmbeddingMessage(
                 RabbitMQAiMessageConfig.EXCHANGE_NAME,
                 RabbitMQAiMessageConfig.VECTOR_ROUTING_KEY,
-                groupedDocuments);
+                ids);
     }
 
 }

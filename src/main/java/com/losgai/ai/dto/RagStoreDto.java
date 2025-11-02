@@ -1,6 +1,5 @@
 package com.losgai.ai.dto;
 
-import cn.dev33.satoken.stp.StpUtil;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;

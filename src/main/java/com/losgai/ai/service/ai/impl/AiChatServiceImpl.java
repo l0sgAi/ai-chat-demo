@@ -12,7 +12,7 @@ import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
 import com.losgai.ai.mq.sender.AiMessageSender;
 import com.losgai.ai.service.ai.AiChatService;
-import com.losgai.ai.util.ModelBuilderSpringAiWithMemo;
+import com.losgai.ai.util.ChatClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.metadata.Usage;
@@ -41,11 +41,11 @@ public class AiChatServiceImpl implements AiChatService {
 
     private final AiConfigMapper aiConfigMapper;
 
-    private final ModelBuilderSpringAiWithMemo modelBuilderSpringAiWithMemo;
-
     private final AiSessionMapper aiSessionMapper;
 
     private final AiMessageSender aiMessageSender;
+
+    private final ChatClientFactory chatClientFactory;
 
     /**
      * @param aiChatParamDTO 对话参数
@@ -54,7 +54,8 @@ public class AiChatServiceImpl implements AiChatService {
      * @apiNote AI对话请求，基于虚拟线程实现异步处理，SpringAI实现
      */
     @Override
-    public CompletableFuture<Boolean> sendQuestionAsyncWithMemo(AiChatParamDTO aiChatParamDTO, String sessionId) {
+    public CompletableFuture<Boolean> sendQuestionAsyncWithMemo(AiChatParamDTO aiChatParamDTO,
+                                                                String sessionId) {
         return CompletableFuture.supplyAsync(() -> {
             if (emitterManager.isOverLoad())
                 return false;
@@ -87,7 +88,9 @@ public class AiChatServiceImpl implements AiChatService {
             if (conversationId == null) {
                 return false;
             }
-            Flux<ChatResponse> chatResponseFlux = modelBuilderSpringAiWithMemo.buildModelStreamWithMemo(aiConfig,
+            // 构建对话流
+            Flux<ChatResponse> chatResponseFlux = chatClientFactory.streamChat(
+                    aiConfig,
                     aiChatParamDTO.getUrlList(),
                     "你是一个友善的AI助手",
                     aiChatParamDTO.getQuestion(),

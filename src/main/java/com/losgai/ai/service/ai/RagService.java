@@ -23,4 +23,6 @@ public interface RagService {
     List<String> getIndexes() throws IOException;
 
     void embedding(List<Long> ids) throws IOException;
+
+    void deleteByDocIdBatch(List<Long> ids);
 }

@@ -32,6 +32,16 @@ public class AiChatParamDTO {
      */
     private String modelName;
 
+//    /**
+//     * 是否使用RAG
+//     */
+//    private Boolean useRag;
+//
+//    /**
+//     * 是否使用MCP联网
+//     */
+//    private Boolean useSearch;
+
     /**
      * 附带的文件url列表
      * */
