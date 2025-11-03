@@ -3,6 +3,9 @@ package com.losgai.ai.service.ai.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -42,7 +45,7 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
 
 
     @Override
-    @Cacheable(value = "aiMessagePairCache",key = "#sessionId")
+    @Cacheable(value = "aiMessagePairCache", key = "#sessionId")
     public List<AiMessagePair> selectBySessionIdInitial(Long sessionId) {
         return aiMessagePairMapper.selectBySessionIdLimit(sessionId);
     }
@@ -56,14 +59,31 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
                 sessionId,
                 lastId,
                 pageSize
-                );
+        );
         long total = aiMessagePairMapper.countBySessionId(sessionId);
-        return new CursorPageInfo<>(aiMessagePairs,total);
+        return new CursorPageInfo<>(aiMessagePairs, total);
+    }
+
+    @Override
+    public boolean delAiMessagePairDoc(String indexNameAiMsg, Long sessionId) throws IOException {
+        DeleteByQueryRequest request = new DeleteByQueryRequest.Builder()
+                .index(indexNameAiMsg) // 目标索引
+                .query(QueryBuilders.term(t -> t.field("sessionId").value(sessionId))) // term 查询
+                .build();
+
+        DeleteByQueryResponse response = esClient.deleteByQuery(request);
+
+        if (response.deleted() != null) {
+            long deleted = response.deleted(); // 删除的文档数
+            log.info("删除 sessionId={} 的文档数量：{}", sessionId, deleted);
+        }
+
+        return true;
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "aiMessagePairCache",key = "#aiMessage.getSessionId()")
+    @CacheEvict(value = "aiMessagePairCache", key = "#aiMessage.getSessionId()")
     public void addMessage(AiMessagePair aiMessage) {
         Date messageDate = Date.from(Instant.now());
         aiMessage.setCreateTime(messageDate);
@@ -76,14 +96,14 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
     }
 
     @Override
-    @CacheEvict(value = "aiMessagePairCache",key = "#id")
+    @CacheEvict(value = "aiMessagePairCache", key = "#id")
     public void deleteBySessionId(Long id) {
         aiMessagePairMapper.deleteBySessionId(id);
     }
 
     @Override
     @Description("文档批量插入Elasticsearch，返回状态true/false")
-    public boolean insertAiMessagePairDocBatch(String indexName,List<AiMessagePair> aiMessagePairs) throws IOException {
+    public boolean insertAiMessagePairDocBatch(String indexName, List<AiMessagePair> aiMessagePairs) throws IOException {
         // 1.判断是否有索引，没有则创建
         ElasticsearchIndexUtils.createIndex(indexName, esClient);
 
@@ -92,13 +112,13 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
         List<BulkOperation> bulkOperations = aiMessagePairs.stream()
                 .map(aiMessagePair ->
                         BulkOperation.of(builder ->
-                                builder.index(i->i.index(indexName)
+                                builder.index(i -> i.index(indexName)
                                         .document(aiMessagePair)
                                         .id(String.valueOf(aiMessagePair.getId())))))
                 .toList();
 
         // 使用bulk方法执行批量操作并获得响应
-        BulkResponse response = esClient.bulk(e->e.index(indexName).operations(bulkOperations));
+        BulkResponse response = esClient.bulk(e -> e.index(indexName).operations(bulkOperations));
         log.info("ES批量插入操作完成，耗时{}毫秒", response.took());
         if (response.errors()) {
             log.error("ES批量操作-有错误发生");
@@ -109,7 +129,7 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
 
     @Override
     @Description("文档单条插入Elasticsearch，返回状态true/false")
-    public boolean insertAiMessagePairDoc(String indexName,AiMessagePair aiMessagePair) throws IOException {
+    public boolean insertAiMessagePairDoc(String indexName, AiMessagePair aiMessagePair) throws IOException {
         // 1.判断是否有索引，没有则创建
         ElasticsearchIndexUtils.createIndex(indexName, esClient);
 
@@ -128,24 +148,29 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
     @Override
     public List<AiMessagePair> getFromGlobalSearch(String indexName, String keyWord) throws IOException {
         // 1. 获取当前用户的会话对应的id列表
-        Set<Long> sessionIds  = aiSessionMapper.selectAllIdsByUserId(StpUtil.getLoginIdAsLong());
+        Set<Long> sessionIds = aiSessionMapper.selectAllIdsByUserId(StpUtil.getLoginIdAsLong());
         if (sessionIds == null || sessionIds.isEmpty()) {
             return List.of();
         }
-        // 2. 创建查询条件
+
+        // 2. 构建查询条件
         SearchRequest searchRequest = SearchRequest.of(s -> s
                 .index(indexName)
-                .size(50)
+                .size(12) // 限制最多返回 12 条
                 .query(q -> q
                         .bool(b -> b
-                                // 使用 multi_match 查询来匹配 userContent 或 aiContent 字段
+                                // 使用 multi_match 且设置严格匹配策略
                                 .must(m -> m
                                         .multiMatch(mm -> mm
                                                 .query(keyWord)
                                                 .fields("userContent", "aiContent")
+                                                .type(TextQueryType.BestFields)
+                                                .operator(Operator.And) // 所有词都必须匹配
+                                                .minimumShouldMatch("75%") // 至少匹配75%的分词
+                                                .fuzziness("AUTO")
                                         )
                                 )
-                                // filter 子句保持不变，用于过滤会话ID
+                                // filter：过滤用户相关的 sessionId
                                 .filter(f -> f
                                         .terms(t -> t
                                                 .field("sessionId")
@@ -169,5 +194,6 @@ public class AiMessagePairServiceImpl implements AiMessagePairService {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
 
 }

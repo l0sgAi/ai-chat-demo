@@ -22,6 +22,14 @@ public class AiMessageSender {
         rabbitTemplate.convertAndSend(exchange, routingKey, message);
     }
 
+    // 删除会话记录同步
+    public void sendMessageDel(
+            String exchange,
+            String routingKey,
+            Long sessionId) {
+        rabbitTemplate.convertAndSend(exchange, routingKey, sessionId);
+    }
+
     // 发送向量嵌入请求
     public void sendEmbeddingMessage(
             String exchange,

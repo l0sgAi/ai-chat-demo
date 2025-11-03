@@ -64,6 +64,23 @@ public class AiMessageConsumer {
 
     }
 
+    @RabbitListener(queues = RabbitMQAiMessageConfig.QUEUE_NAME_DEL)
+    public void receiveDelMessage(Long sessionId) {
+        log.info("[MQ]消费者收到消息：{}", sessionId);
+        boolean result;
+        try {
+            result = aiMessagePairEsService.delAiMessagePairDoc(EsConstants.INDEX_NAME_AI_MSG, sessionId);
+            if (result) {
+                log.info("[MQ]成功删除 ES，消息ID: {}", sessionId);
+            } else {
+                log.warn("[MQ]删除 ES 失败，消息ID: {}", sessionId);
+            }
+        } catch (IOException e) {
+            log.error("[MQ]删除 ES 异常，消息ID: {}", sessionId, e);
+        }
+
+    }
+
     @RabbitListener(queues = RabbitMQAiMessageConfig.VECTOR_QUEUE_NAME)
     public void receiveMessageVector(List<Long> ids) {
         log.info("[MQ]向量批量嵌入消费者收到消息：{}", ids);

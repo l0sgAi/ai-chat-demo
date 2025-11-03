@@ -2,9 +2,11 @@ package com.losgai.ai.service.ai.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.losgai.ai.common.sys.CursorPageInfo;
+import com.losgai.ai.config.RabbitMQAiMessageConfig;
 import com.losgai.ai.entity.ai.AiSession;
 import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
+import com.losgai.ai.mq.sender.AiMessageSender;
 import com.losgai.ai.service.ai.AiChatSessionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,8 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
     private final AiSessionMapper aiSessionMapper;
 
     private final AiMessagePairMapper aiMessagePairMapper;
+
+    private final AiMessageSender aiMessageSender;
 
     /**
      * 新增单条会话
@@ -61,7 +65,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
                         lastMessageTime,
                         pageSize);
         Long total = aiSessionMapper.countSessionByUserId(userId);
-        return new CursorPageInfo<>(aiSessions,total);
+        return new CursorPageInfo<>(aiSessions, total);
     }
 
     /**
@@ -72,8 +76,13 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
     public void deleteById(Long id) {
         aiSessionMapper.deleteByPrimaryKey(id);
         aiMessagePairMapper.deleteBySessionId(id);
+        // 删除ES中储存的会话
+        aiMessageSender.sendMessageDel(
+                RabbitMQAiMessageConfig.EXCHANGE_NAME,
+                RabbitMQAiMessageConfig.ROUTING_KEY_DEL,
+                id
+        );
     }
-
 
 
 }

@@ -141,7 +141,7 @@ public class ChatClientFactory {
                 retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
                         .documentRetriever(VectorStoreDocumentRetriever.builder()
                                 // 相似度阈值，0.5表示只有当检索结果的相似度分数 ≥ 0.50 时，才返回上层
-                                .similarityThreshold(0.10)
+                                .similarityThreshold(0.1)
                                 // 注入的向量存储
                                 .vectorStore(vectorStore)
                                 .build())

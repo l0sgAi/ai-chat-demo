@@ -21,6 +21,10 @@ public class RabbitMQAiMessageConfig {
     public static final String QUEUE_NAME = "ai.message.queue";
     public static final String ROUTING_KEY = "ai.message";
 
+    // ai消息删除队列和路由
+    public static final String QUEUE_NAME_DEL = "ai.message.del.queue";
+    public static final String ROUTING_KEY_DEL = "ai.message.del";
+
     // 向量化消息同步队列和路由：多个索引和向量
     public static final String VECTOR_QUEUE_NAME = "vector.queue";
     public static final String VECTOR_ROUTING_KEY = "vector.message";
@@ -68,6 +72,16 @@ public class RabbitMQAiMessageConfig {
     @Bean
     public Binding vectorSingleBinding(Queue vectorSingleQueue, Exchange exchange) {
         return BindingBuilder.bind(vectorSingleQueue).to((DirectExchange) exchange).with(VECTOR_SINGLE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue delMessageQueue() {
+        return QueueBuilder.durable(QUEUE_NAME_DEL).build();
+    }
+
+    @Bean
+    public Binding delMessageBinding(Queue delMessageQueue, Exchange exchange) {
+        return BindingBuilder.bind(delMessageQueue).to((DirectExchange) exchange).with(ROUTING_KEY_DEL);
     }
 
     // 反序列化配置

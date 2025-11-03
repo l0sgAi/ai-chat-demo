@@ -22,4 +22,6 @@ public interface AiMessagePairService {
     List<AiMessagePair> selectBySessionIdInitial(Long sessionId);
 
     CursorPageInfo<AiMessagePair> selectBySessionIdPage(Long sessionId, Long lastId, int pageSize);
+
+    boolean delAiMessagePairDoc(String indexNameAiMsg, Long sessionId) throws IOException;
 }
