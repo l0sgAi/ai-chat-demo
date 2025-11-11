@@ -1,74 +1,19 @@
 spring:
-  ai:
-    vectorstore:
-      elasticsearch:
-        initialize-schema: true
-        index-name: test_vector
-        dimensions: 1536
-        similarity: cosine
-  rabbitmq:
-    host: 192.168.200.132
-    port: 5672
-    username: admin
-    password: admin
-    virtual-host: /
-    listener:
-      simple:
-        retry:
-          max-attempts: 3
-  elasticsearch:
-    uris: http://192.168.200.132:9200 # 修改为你的ES地址，如果是集群，用逗号分隔
-#    username: elastic # 如果你的ES有安全认证
-#    password: your_password # 对应的密码
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 100MB
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    #MySQL配置
-    driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.200.132:3306/AIDB?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true
-    username: root
-    password: 123456
   application:
-    name: ai
-  # redis配置
-  data:
-    redis:
-      # TODO 修改成自己的ip与端口号
-      host: 192.168.200.132
-      port: 6389
-
-#      password:
-
-#Sa-Token 配置
-sa-token:
-  # token 名称（同时也是 cookie 名称）
-  token-name: satoken
-  # token 有效期（单位：秒） 默认30天，-1 代表永久有效
-  timeout: 2592000
-  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
-  active-timeout: -1
-  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
-  is-concurrent: true
-  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
-  is-share: false
-  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
-  token-style: uuid
-  # 是否输出操作日志
-  is-log: true
-
-mybatis:
-  mapper-locations: classpath:mapper/**/*.xml
-
-#minio配置
-ai-chat-demo:
-  minio:
-    endpointUrl: http://192.168.200.132:9001
-    accessKey: admin
-    secretKey: admin123456
-    bucketName: ai-chat-multimodel-bucket
+    name: mcp-server
+  ai:
+    mcp:
+      server:
+        version: 1.0.0
+        name: mcp-server
+        type: ASYNC
+        instructions: "This server provides internet information tools and resources"
+        sse-message-endpoint: /mcp/search/sse
+        capabilities:
+            tool: true
+            resource: true
+            prompt: true
+            completion: true
 
 server:
-  port: 8575
+  port: 8577

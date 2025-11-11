@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.losgai</groupId>
-    <artifactId>ai</artifactId>
+    <artifactId>mcp-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ai</name>
+    <name>mcp-server</name>
     <description>ai-chat-demo</description>
     <url/>
     <licenses>
@@ -30,45 +30,28 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0</spring-ai.version>
-        <langchain4j.version>0.35.0</langchain4j.version>
-        <sa-token.version>1.44.0</sa-token.version>
+        <spring-ai.version>1.0.3</spring-ai.version>
         <druid.version>1.2.25</druid.version>
         <mybatis.version>3.0.4</mybatis.version>
         <mysql.version>8.4.0</mysql.version>
-        <es.version>8.15.5</es.version>
         <hutool.version>5.8.38</hutool.version>
         <swagger.version>2.2.31</swagger.version>
         <springboot.version>3.5.0</springboot.version>
-        <minio.version>8.5.2</minio.version>
-        <pagehelper-spring-boot-starter.version>1.4.7</pagehelper-spring-boot-starter.version>
-        <pdfbox.version>3.0.5</pdfbox.version>
-        <poi.v>5.4.0</poi.v>
+        <okhttp.version>5.1.0</okhttp.version>
     </properties>
 
     <dependencies>
+
         <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi</artifactId>
-            <version>${poi.v}</version>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>${okhttp.version}</version>
         </dependency>
 
         <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-scratchpad</artifactId>
-            <version>${poi.v}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <version>${poi.v}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>${pdfbox.version}</version>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+            <version>${spring-ai.version}</version>
         </dependency>
 
         <dependency>
@@ -102,121 +85,10 @@
             <version>${spring-ai.version}</version>
         </dependency>
 
-        <!--SpringAI ES整合-->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-vector-store-elasticsearch</artifactId>
-            <version>${spring-ai.version}</version>
-        </dependency>
-
-        <!--SpringAI 矢量数据库-->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-advisors-vector-store</artifactId>
-            <version>${spring-ai.version}</version>
-        </dependency>
-
-        <!--SpringAI RAG-->
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-rag</artifactId>
-            <version>${spring-ai.version}</version>
-        </dependency>
-
-        <!-- OpenAI compatible API (支持 Qwen 百炼 OpenAI 模式) -->
-        <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-open-ai -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-open-ai</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <!--Mysql驱动-->
-        <!-- https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>${mysql.version}</version>
-        </dependency>
-
-        <!--Druid连接池子-->
-        <!-- https://mvnrepository.com/artifact/com.alibaba/druid-spring-boot-starter -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid-spring-boot-starter</artifactId>
-            <version>${druid.version}</version>
-        </dependency>
-
-        <!--Mybatis-->
-        <!-- https://mvnrepository.com/artifact/org.mybatis.spring.boot/mybatis-spring-boot-starter -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-            <version>${mybatis.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
-        </dependency>
-
-        <!--langchain4j-es集成-->
-        <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-elasticsearch -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-elasticsearch</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <!--ES客户端-->
-        <!-- https://mvnrepository.com/artifact/co.elastic.clients/elasticsearch-java -->
-        <dependency>
-            <groupId>co.elastic.clients</groupId>
-            <artifactId>elasticsearch-java</artifactId>
-            <version>${es.version}</version> <!--这里选择和你的实际ES版本匹配的版本-->
-        </dependency>
-
-        <!--SpringBoot集成-->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-open-ai-spring-boot-starter</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <!--反应式组件-->
-        <!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-reactor -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-reactor</artifactId>
-            <version>${langchain4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j</artifactId>
-            <version>${langchain4j.version}</version> <!-- 确保与你使用的版本一致 -->
-        </dependency>
-
-        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-spring-boot3-starter</artifactId>
-            <version>${sa-token.version}</version>
-        </dependency>
-
-        <!-- Sa-Token 整合 RedisTemplate -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-redis-template</artifactId>
-            <version>${sa-token.version}</version>
-        </dependency>
-
-        <!-- Sa-Token 整合 Fastjson2 -->
-        <dependency>
-            <groupId>cn.dev33</groupId>
-            <artifactId>sa-token-fastjson2</artifactId>
-            <version>${sa-token.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
@@ -234,25 +106,6 @@
             <version>${springboot.version}</version>
         </dependency>
 
-        <!--MinIO文件上传-->
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
-            <version>${minio.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
-            <version>${springboot.version}</version>
-        </dependency>
-
-        <!--分页插件整合-->
-        <dependency>
-            <groupId>com.github.pagehelper</groupId>
-            <artifactId>pagehelper-spring-boot-starter</artifactId>
-            <version>${pagehelper-spring-boot-starter.version}</version>
-        </dependency>
 
     </dependencies>
 
