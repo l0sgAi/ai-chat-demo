@@ -88,51 +88,46 @@ public class AiChatServiceImpl implements AiChatService {
             if (conversationId == null) {
                 return false;
             }
-            // 构建对话流
-            Flux<ChatResponse> chatResponseFlux = chatClientFactory.streamChat(
-                    aiConfig,
-                    aiChatParamDTO.getUrlList(),
-                    aiChatParamDTO.getQuestion(),
-                    String.valueOf(conversationId));
             // 用于跟踪最后一个 ChatResponse
             AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
-            // 一个中断信号
-            Sinks.One<Boolean> interruptSignal = Sinks.one();
-            // 中断标志位
+            // 用于中断对话
             AtomicBoolean isInterrupted = new AtomicBoolean(false);
-            chatResponseFlux
-                    .takeUntilOther(interruptSignal.asMono())
+
+            chatClientFactory.streamChat(
+                            aiConfig,
+                            aiChatParamDTO.getUrlList(),
+                            aiChatParamDTO.getQuestion(),
+                            String.valueOf(conversationId))
                     .subscribe(
                             token -> {
                                 // 获取当前输出内容片段
-                                String text = "";
-                                String reasoningText = "";
                                 if (token.getResult() != null) {
+                                    String text = "";
+                                    token.getResult();
                                     text = token.getResult().getOutput().getText();
-                                }
-                                if (StrUtil.isNotBlank(text)) {
-                                    sb.append(text);
-                                    // log.info("当前段数据:{}", text);
-                                    // 换行符转义：token换行符转换成<br>
-                                    text = text.replace("\n", "<br>");
-                                    // 换行符转义：如果token以换行符为结尾，转换成<br>
-                                    text = text.replace(" ", "&nbsp;");
-                                }
-                                // 发送返回的数据
-                                try {
                                     if (StrUtil.isNotBlank(text)) {
-                                        // 中断条件
-                                        if (emitterManager.getEmitter(sessionId) == null) {
-                                            log.info("===>SSE已经被手动中断，执行onComplete");
-                                            isInterrupted.set(true);
-                                            interruptSignal.tryEmitValue(true);
-                                        } else {
-                                            finalEmitter.send(SseEmitter.event().data(text));
-                                        }
+                                        sb.append(text);
+                                        // log.info("当前段数据:{}", text);
+                                        // 换行符转义：token换行符转换成<br>
+                                        text = text.replace("\n", "<br>");
+                                        // 换行符转义：如果token以换行符为结尾，转换成<br>
+                                        text = text.replace(" ", "&nbsp;");
                                     }
-                                } catch (IOException e) {
-                                    log.error("===>SSE发送异常：{}", e.getMessage());
-                                    throw new RuntimeException(e);
+                                    // 发送返回的数据
+                                    try {
+                                        if (StrUtil.isNotBlank(text)) {
+                                            // 中断条件
+                                            if (emitterManager.getEmitter(sessionId) == null) {
+                                                log.info("===>SSE已经被手动中断，执行onComplete");
+                                                isInterrupted.set(true);
+                                            } else {
+                                                finalEmitter.send(SseEmitter.event().data(text));
+                                            }
+                                        }
+                                    } catch (IOException e) {
+                                        log.error("===>SSE发送异常：{}", e.getMessage());
+                                        throw new RuntimeException(e);
+                                    }
                                 }
                                 // 更新最后一个响应
                                 lastResponse.set(token);

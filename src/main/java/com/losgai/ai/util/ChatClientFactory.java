@@ -4,6 +4,8 @@ import cn.hutool.core.collection.CollUtil;
 import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.memory.MybatisChatMemory;
 import com.losgai.ai.service.ai.RagService;
+import com.losgai.ai.tools.DateTimeTools;
+import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -12,15 +14,20 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
+import org.springframework.ai.mcp.AsyncMcpToolCallbackProvider;
+import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
 import org.springframework.core.io.UrlResource;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
@@ -46,6 +53,8 @@ public class ChatClientFactory {
     private final RagService ragService;
 
     private final EmbeddingStoreFactory embeddingStoreFactory;
+
+    private final AsyncMcpToolCallbackProvider toolCallbackProvider;
 
     private static final String INDEX_FINDING_SYSTEM_MSG =
             "You are an expert-level AI Routing Agent. " +
@@ -94,7 +103,13 @@ public class ChatClientFactory {
                 .build();
 
         return ChatClient.builder(chatModel)
-                .defaultSystem("你是一个由losgai开发的、友善的AI助手，请保持你的语气平和、耐心、礼貌。")
+                // 默认工具调用
+                .defaultTools(new DateTimeTools())
+                // 默认系统提示词
+                .defaultSystem("you are a helpful ai assistant developed by losgai." +
+                        "You are connected to a Web Search Tool. " +
+                        "If the user asks something you cannot answer confidently, " +
+                        "always call the tool 'webSearch' with the query string.")
                 .build();
     }
 
@@ -151,9 +166,11 @@ public class ChatClientFactory {
                                 .build())
                         .build();
             }
-        }else {
+        } else {
             log.info("跳过RAG步骤");
         }
+
+        ToolCallback[] toolCallbacks = toolCallbackProvider.getToolCallbacks();
 
         // 多模态输入
         if (CollUtil.isNotEmpty(urlList) && aiConfig.getModelType() == 2) {
@@ -166,8 +183,9 @@ public class ChatClientFactory {
                 }
             }).toList();
 
-            if(retrievalAugmentationAdvisor == null){
+            if (retrievalAugmentationAdvisor == null) {
                 return chatClient.prompt()
+                        .toolCallbacks(toolCallbacks)
                         .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                         .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
@@ -175,6 +193,7 @@ public class ChatClientFactory {
                         .chatResponse();
             }
             return chatClient.prompt()
+                    .toolCallbacks(toolCallbacks)
                     .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                     .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
@@ -183,8 +202,9 @@ public class ChatClientFactory {
                     .chatResponse();
         }
 
-        if(retrievalAugmentationAdvisor == null){
+        if (retrievalAugmentationAdvisor == null) {
             return chatClient.prompt()
+                    .toolCallbacks(toolCallbacks)
                     .user(userMsg)
                     .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
@@ -194,6 +214,7 @@ public class ChatClientFactory {
 
         // 普通文本
         return chatClient.prompt()
+                .toolCallbacks(toolCallbacks)
                 .user(userMsg)
                 .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))

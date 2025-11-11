@@ -6,6 +6,17 @@ spring:
         index-name: test_vector
         dimensions: 1536
         similarity: cosine
+    mcp:
+      client:
+        enabled: true
+        name: chat-client
+        version: 1.0.0
+        request-timeout: 120s
+        type: ASYNC # 类型同步或者异步
+        sse:
+          connections:
+            search:
+              url: http://localhost:8577/mcp/search/
   rabbitmq:
     host: 192.168.200.132
     port: 5672
@@ -39,8 +50,25 @@ spring:
       # TODO 修改成自己的ip与端口号
       host: 192.168.200.132
       port: 6389
-
 #      password:
+
+logging:
+  level:
+    sql: debug
+    web: debug
+    # Spring AI MCP 相关日志
+    org.springframework.ai.mcp: DEBUG
+    org.springframework.ai.mcp.client: TRACE
+    org.springframework.ai.chat.model: DEBUG
+
+    # WebClient 日志（查看 HTTP 请求）
+    org.springframework.web.reactive.function.client: DEBUG
+
+    # Reactor Netty 日志（查看底层网络通信）
+    reactor.netty.http.client: DEBUG
+
+    # Jackson 日志（查看 JSON 解析）
+    com.fasterxml.jackson: DEBUG
 
 #Sa-Token 配置
 sa-token:

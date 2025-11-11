@@ -24,7 +24,7 @@ public class AiConfigServiceImpl implements AiConfigService {
 
     @Override
     @Transactional
-    @CacheEvict("models")
+    @CacheEvict(value = "models",allEntries = true)
     public ResultCodeEnum add(AiConfig aiConfig) {
         aiConfig.setCreateTime(Date.from(Instant.now()));
         aiConfig.setUpdateTime(Date.from(Instant.now()));
@@ -42,7 +42,7 @@ public class AiConfigServiceImpl implements AiConfigService {
     }
 
     @Override
-    @CacheEvict("models")
+    @CacheEvict(value = "models",allEntries = true)
     public ResultCodeEnum deleteById(Long id) {
         aiConfigMapper.deleteByPrimaryKey(id);
         return ResultCodeEnum.SUCCESS;
@@ -50,7 +50,7 @@ public class AiConfigServiceImpl implements AiConfigService {
 
     @Override
     @Transactional
-    @CacheEvict("models")
+    @CacheEvict(value = "models",allEntries = true)
     public ResultCodeEnum update(AiConfig aiConfig) {
         aiConfigMapper.updateByPrimaryKeySelective(aiConfig);
         if(aiConfig.getIsDefault()==1){

@@ -30,7 +30,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0</spring-ai.version>
+        <spring-ai.version>1.0.3</spring-ai.version>
         <langchain4j.version>0.35.0</langchain4j.version>
         <sa-token.version>1.44.0</sa-token.version>
         <druid.version>1.2.25</druid.version>
@@ -47,6 +47,13 @@
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-mcp-client</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
