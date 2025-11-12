@@ -21,6 +21,7 @@ import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.UrlResource;
@@ -166,7 +167,7 @@ public class SpringAITests {
                 .maxTokens(2048)
                 .temperature(0.85)
                 .topP(0.9)
-                .model("qwen-turbo-latest")
+                .model("qwen-plus-latest")
                 .streamUsage(true)
                 .build();
 
@@ -182,10 +183,12 @@ public class SpringAITests {
                 .defaultSystem("你是一个由losgai开发的、友善的AI助手，请保持你的语气平和、耐心、礼貌。")
                 .build();
 
+        ToolCallback[] toolCallbacks = toolCallbackProvider.getToolCallbacks();
+
         // 反应式对话流
         Flux<ChatResponse> responseFlux = chatClient.prompt()
                 .user("帮我搜索英雄联盟S15世界赛结果")
-                .toolCallbacks(toolCallbackProvider.getToolCallbacks())
+                .toolCallbacks(toolCallbacks)
                 .stream()
                 .chatResponse();
 

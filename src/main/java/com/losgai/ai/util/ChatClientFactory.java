@@ -2,10 +2,10 @@ package com.losgai.ai.util;
 
 import cn.hutool.core.collection.CollUtil;
 import com.losgai.ai.entity.ai.AiConfig;
+import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.memory.MybatisChatMemory;
 import com.losgai.ai.service.ai.RagService;
 import com.losgai.ai.tools.DateTimeTools;
-import io.micrometer.observation.ObservationRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -14,10 +14,8 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import org.springframework.ai.mcp.AsyncMcpToolCallbackProvider;
-import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -27,10 +25,10 @@ import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
 import org.springframework.core.io.UrlResource;
-import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
@@ -54,23 +52,34 @@ public class ChatClientFactory {
 
     private final EmbeddingStoreFactory embeddingStoreFactory;
 
-    private final AsyncMcpToolCallbackProvider toolCallbackProvider;
+    private final SseEmitterManager sseEmitterManager;
 
-    private static final String INDEX_FINDING_SYSTEM_MSG =
-            "You are an expert-level AI Routing Agent. " +
-                    "Your sole task is to select the most relevant index name from a given list based on a user's question.\n" +
-                    "\n" +
-                    "Your workflow is as follows:\n" +
-                    "1.  Analyze the user's question to understand its core intent and subject matter.\n" +
-                    "2.  Examine each name in the \"Index Name List\" to understand the data domain it represents.\n" +
-                    "3.  Perform a semantic match to determine which index is most likely to contain the information needed to answer the user's question.\n" +
-                    "\n" +
-                    "You must strictly adhere to the following rules:\n" +
-                    "-   **Unique Output**: Your response MUST be one of the index names from the list, or the string \"0\".\n" +
-                    "-   **No Explanation**: Do NOT include any explanations, justifications, apologies, or any form of additional text. For example, do not say \"I think the best match is a\". You must only output \"a\".\n" +
-                    "-   **Definition of \"0\"**: If the user's question is small talk, a greeting, completely unrelated to any of the indexes, or if you cannot determine a clear correlation, you MUST output \"0\".\n" +
-                    "-   **Exact Match**: The outputted index name must be an exact, case-sensitive match to the string provided in the list.\n" +
-                    "-   **Decisive Choice**: When multiple options seem partially relevant, choose the one that is most centrally and directly related. If you cannot make a clear best choice, default to outputting \"0\" to avoid incorrect routing.";
+//        private final AsyncMcpToolCallbackProvider toolCallbackProvider;
+
+    // 自定义MCP工具回调提供器，添加日志调试
+    private final CustomMcpToolCallbackProvider toolCallbackProvider;
+
+    private static final String INDEX_FINDING_SYSTEM_MSG = "You are an expert-level AI Routing Agent. " +
+            "Your sole task is to select the most relevant index name from a given list based on a user's question.\n"
+            +
+            "\n" +
+            "Your workflow is as follows:\n" +
+            "1.  Analyze the user's question to understand its core intent and subject matter.\n" +
+            "2.  Examine each name in the \"Index Name List\" to understand the data domain it represents.\n"
+            +
+            "3.  Perform a semantic match to determine which index is most likely to contain the information needed to answer the user's question.\n"
+            +
+            "\n" +
+            "You must strictly adhere to the following rules:\n" +
+            "-   **Unique Output**: Your response MUST be one of the index names from the list, or the string \"0\".\n"
+            +
+            "-   **No Explanation**: Do NOT include any explanations, justifications, apologies, or any form of additional text. For example, do not say \"I think the best match is a\". You must only output \"a\".\n"
+            +
+            "-   **Definition of \"0\"**: If the user's question is small talk, a greeting, completely unrelated to any of the indexes, or if you cannot determine a clear correlation, you MUST output \"0\".\n"
+            +
+            "-   **Exact Match**: The outputted index name must be an exact, case-sensitive match to the string provided in the list.\n"
+            +
+            "-   **Decisive Choice**: When multiple options seem partially relevant, choose the one that is most centrally and directly related. If you cannot make a clear best choice, default to outputting \"0\" to avoid incorrect routing.";
 
     /**
      * 根据 AI 配置创建或复用 ChatClient
@@ -121,6 +130,16 @@ public class ChatClientFactory {
             List<String> urlList,
             String userMsg,
             String conversationId) {
+        // 状态通知的sse
+        if (sseEmitterManager.getEmitter(conversationId) == null) {
+            sseEmitterManager.addEmitter(conversationId, new SseEmitter(30000L));
+        }
+        SseEmitter emitter = sseEmitterManager.getEmitter(conversationId);
+        try {
+            emitter.send("正在连接服务器...");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         ChatClient chatClient = getOrCreateClient(aiConfig);
 
@@ -135,6 +154,13 @@ public class ChatClientFactory {
         Advisor retrievalAugmentationAdvisor = null;
 
         if (CollUtil.isNotEmpty(indexes)) {
+
+            try {
+                emitter.send("正在检索知识库...");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             Set<String> indexSet = Set.copyOf(indexes);
             String INDEX_FINDING_USER_MSG = "Index Name List:" +
                     indexes +
@@ -150,8 +176,8 @@ public class ChatClientFactory {
             // 索引合法，构建检索器
             if (indexSet.contains(indexName)) {
                 // 构建检索器
-                ElasticsearchVectorStore vectorStore =
-                        embeddingStoreFactory.createVectorStore(indexName);
+                ElasticsearchVectorStore vectorStore = embeddingStoreFactory
+                        .createVectorStore(indexName);
                 // 构建召回器
                 retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
                         .documentRetriever(VectorStoreDocumentRetriever.builder()
@@ -170,13 +196,20 @@ public class ChatClientFactory {
             log.info("跳过RAG步骤");
         }
 
+        try {
+            emitter.send("正在检索...");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         ToolCallback[] toolCallbacks = toolCallbackProvider.getToolCallbacks();
 
         // 多模态输入
         if (CollUtil.isNotEmpty(urlList) && aiConfig.getModelType() == 2) {
             List<Media> mediaList = urlList.stream().map(url -> {
                 try {
-                    MimeType mimeType = url.endsWith("png") ? MimeTypeUtils.IMAGE_PNG : MimeTypeUtils.IMAGE_JPEG;
+                    MimeType mimeType = url.endsWith("png") ? MimeTypeUtils.IMAGE_PNG
+                            : MimeTypeUtils.IMAGE_JPEG;
                     return Media.builder().mimeType(mimeType).data(new UrlResource(url)).build();
                 } catch (MalformedURLException e) {
                     throw new RuntimeException(e);
@@ -185,7 +218,7 @@ public class ChatClientFactory {
 
             if (retrievalAugmentationAdvisor == null) {
                 return chatClient.prompt()
-                        .toolCallbacks(toolCallbacks)
+//                        .toolCallbacks(toolCallbacks)
                         .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                         .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
@@ -193,7 +226,7 @@ public class ChatClientFactory {
                         .chatResponse();
             }
             return chatClient.prompt()
-                    .toolCallbacks(toolCallbacks)
+//                    .toolCallbacks(toolCallbacks)
                     .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                     .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))

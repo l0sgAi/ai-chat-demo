@@ -150,6 +150,7 @@ public class AiChatServiceImpl implements AiChatService {
                                         usageCount);
                                 finalEmitter.completeWithError(e);
                                 emitterManager.removeEmitter(sessionId); // 出错时也移除
+                                emitterManager.removeEmitter(String.valueOf(conversationId));
                             }, // 错误处理
                             () -> {// 流结束
                                 log.info("\n回答完毕！");
@@ -164,6 +165,7 @@ public class AiChatServiceImpl implements AiChatService {
                                 }
                                 finalEmitter.complete();
                                 emitterManager.removeEmitter(sessionId); // 只在流结束后移除
+                                emitterManager.removeEmitter(String.valueOf(conversationId));
                                 log.info("最终拼接的数据:\n{}", sb);
                                 log.info("token使用:{}", usageCount);
                                 // 更新正常完成的状态
