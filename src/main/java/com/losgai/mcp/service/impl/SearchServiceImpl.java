@@ -1,32 +1,22 @@
 package com.losgai.mcp.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.losgai.mcp.controller.ai.McpController;
 import com.losgai.mcp.global.SseEmitterManager;
 import com.losgai.mcp.service.SearchService;
-import io.modelcontextprotocol.server.McpAsyncServerExchange;
-import io.modelcontextprotocol.spec.McpSchema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-
-import static com.losgai.mcp.controller.ai.McpController.DEFAULT_EMITTER_ID;
 
 @Slf4j
 @Service
@@ -34,16 +24,15 @@ public class SearchServiceImpl implements SearchService {
 
     private final WebClient webClient;
 
-    private final SseEmitterManager sseEmitterManager;
+//    private final SseEmitterManager sseEmitterManager;
 
     private static final String baseUrl = "https://api.tavily.com";
 
-    private static final String bearerToken = "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";
+    private static final String bearerToken = "tvly-dev-***";
 
     public SearchServiceImpl(
-            SseEmitterManager sseEmitterManager,
-            ObjectMapper objectMapper) {
-        this.sseEmitterManager = sseEmitterManager;
+            SseEmitterManager sseEmitterManager) {
+//        this.sseEmitterManager = sseEmitterManager;
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();
@@ -53,18 +42,11 @@ public class SearchServiceImpl implements SearchService {
     @Tool(name = "webSearch", description = "Searching information from the internet")
     public String search(
             @ToolParam(description = "搜索关键词")
-            String query,
-            @ToolParam(description = "最大返回结果数")
-            int maxResults,
-            ToolContext context) {
+            String query) {
 
-        if (query == null || query.trim().isEmpty()) {
-            return "Invalid query.";
+        if (StrUtil.isBlank(query)) {
+            return "nothing";
         }
-        if (maxResults <= 0) {
-            maxResults = 1;
-        }
-
 
         // 构建请求体
         SearchRequest req = new SearchRequest();
@@ -72,7 +54,7 @@ public class SearchServiceImpl implements SearchService {
         req.setTopic("general");
         req.setSearchDepth("basic");
         req.setChunksPerSource(3);
-        req.setMaxResults(maxResults);
+        req.setMaxResults(5);
         req.setTimeRange(null);
         req.setDays(3);
         req.setIncludeAnswer(true);
@@ -113,7 +95,7 @@ public class SearchServiceImpl implements SearchService {
             } else {
                 out.append("Top results:\n");
                 int idx = 1;
-                for (SearchResult r : results.stream().limit(maxResults).toList()) {
+                for (SearchResult r : results.stream().limit(5).toList()) {
                     out.append(idx++).append(". ").append(safe(r.getTitle())).append("\n");
                     out.append(" URL: ").append(safe(r.getUrl())).append("\n");
                     if (r.getContent() != null && !r.getContent().isBlank()) {
@@ -127,7 +109,7 @@ public class SearchServiceImpl implements SearchService {
 
             out.append("API response_time: ").append(safe(resp.getResponseTime())).append("s");
             // 发送结果
-            sseEmitterManager.getEmitter(DEFAULT_EMITTER_ID).send(out.toString(), MediaType.TEXT_PLAIN);
+//            sseEmitterManager.getEmitter(DEFAULT_EMITTER_ID).send(out.toString(), MediaType.TEXT_PLAIN);
             return out.toString();
         } catch (Exception ex) {
             log.error("搜索服务错误: ", ex);
