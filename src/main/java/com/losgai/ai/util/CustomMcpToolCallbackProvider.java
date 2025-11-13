@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 
 /**
- * 自定义MCP工具回调提供器，添加SSE通知功能
+ * 自定义MCP工具回调提供器，添加日志功能
  */
 @Slf4j
 @Component

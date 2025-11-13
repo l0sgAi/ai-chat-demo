@@ -12,7 +12,7 @@ spring:
         name: chat-client
         version: 1.0.0
         request-timeout: 120s
-        type: ASYNC # 类型同步或者异步
+        type: ASYNC # 类型同步SYNC或者异步ASYNC
         sse:
           connections:
             search:

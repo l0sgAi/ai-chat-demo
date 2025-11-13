@@ -57,11 +57,11 @@ public class SpringAITests {
 
         // 提供有关对话中先前交流的背景信息
         Message assistantMessage =
-                new AssistantMessage("我们正在交流关于英雄联盟S赛的相关问题");
+                new AssistantMessage("我们正在交流关于反恐精英赛事的相关问题");
 
         OpenAiApi openAiApi = OpenAiApi.builder()
                 // 填入自己的API KEY
-                .apiKey("sk-*****")
+                .apiKey("sk-***")
                 // 填入自己的API域名，如果是百炼，即为https://dashscope.aliyuncs.com/compatible-mode
                 // 注意：这里与langchain4j的配置不同，不需要在后面加/v1
                 .baseUrl("https://dashscope.aliyuncs.com/compatible-mode")
@@ -76,7 +76,7 @@ public class SpringAITests {
                 // 模型生成的 tokens 的随机度，取值范围 0.0-1.0 越大的随机度越大
                 .temperature(0.9)
                 // 模型名称
-                .model("qwen-turbo-latest")
+                .model("qwen3-max")
                 // 打开流式对话token计数配置，默认为false
                 .streamUsage(true)
                 .toolCallbacks(toolCallbackProvider.getToolCallbacks())
@@ -111,16 +111,19 @@ public class SpringAITests {
                 .build();
 
         // 反应式对话流
-        Flux<ChatResponse> responseFlux = model.stream(prompt);
+//        ChatResponse call = model.call(prompt);
+//        log.info("输出内容:{}", call.getResult().getOutput().getText());
         // 用于跟踪最后一个 ChatResponse
         AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
+        StringBuffer stringBuffer = new StringBuffer();
 
         // 订阅 Flux 实现流式输出（控制台输出或 SSE 推送）
-        responseFlux.subscribe(
+        model.stream(prompt).subscribe(
                 token -> {
                     // 获取当前输出内容片段
                     if(token.getResult()!=null){
                         log.info("输出内容:{}", token.getResult().getOutput().getText());
+                        stringBuffer.append(token.getResult().getOutput().getText());
                     }
                     // 更新最后一个响应
                     lastResponse.set(token);
@@ -130,6 +133,7 @@ public class SpringAITests {
                     log.error("出错：", error);
                     // 错误，停止倒计时
                     countDownLatch.countDown();
+                    log.info("最终数据汇总：{}", stringBuffer);
                 }, // 错误处理
                 () -> {// 流结束
                     log.info("\n回答完毕！");
@@ -144,6 +148,7 @@ public class SpringAITests {
                     } else {
                         log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
                     }
+                    log.info("最终数据汇总：{}", stringBuffer);
                     countDownLatch.countDown();
                 });
 
@@ -167,7 +172,7 @@ public class SpringAITests {
                 .maxTokens(2048)
                 .temperature(0.85)
                 .topP(0.9)
-                .model("qwen-plus-latest")
+                .model("qwen3-max")
                 .streamUsage(true)
                 .build();
 
