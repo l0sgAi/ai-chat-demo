@@ -45,7 +45,7 @@ public class SearchServiceImpl implements SearchService {
             String query) {
 
         if (StrUtil.isBlank(query)) {
-            return "nothing";
+            return "none";
         }
 
         // 构建请求体

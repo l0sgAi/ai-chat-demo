@@ -30,7 +30,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.3</spring-ai.version>
+        <spring-ai.version>1.1.0-RC1</spring-ai.version>
         <druid.version>1.2.25</druid.version>
         <mybatis.version>3.0.4</mybatis.version>
         <mysql.version>8.4.0</mysql.version>
@@ -41,12 +41,6 @@
     </properties>
 
     <dependencies>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.springframework.ai</groupId>
