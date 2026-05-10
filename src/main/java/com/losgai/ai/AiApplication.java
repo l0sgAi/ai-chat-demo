@@ -1,5 +1,6 @@
 package com.losgai.ai;
 
+import com.losgai.ai.config.PromptProperties;
 import com.losgai.ai.entity.sys.MinioProperties;
 import org.springframework.ai.vectorstore.elasticsearch.autoconfigure.ElasticsearchVectorStoreAutoConfiguration;
 import org.springframework.boot.SpringApplication;
@@ -11,7 +12,7 @@ import org.springframework.cache.annotation.EnableCaching;
         ElasticsearchVectorStoreAutoConfiguration.class  // 排除自动配置
 })
 @EnableCaching
-@EnableConfigurationProperties(MinioProperties.class)
+@EnableConfigurationProperties({MinioProperties.class, PromptProperties.class})
 public class AiApplication {
 
     public static void main(String[] args) {

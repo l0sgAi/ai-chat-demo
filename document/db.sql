@@ -41,7 +41,9 @@ CREATE TABLE `ai_message_pair`
     `tokens`         int unsigned         DEFAULT NULL COMMENT '本轮消耗的Token',
     `create_time`    datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '用户提问时间',
     `response_time`  datetime             DEFAULT NULL COMMENT 'AI回复完成时间',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_session_id_id` (`session_id`, `id` DESC),
+    KEY `idx_sse_session_id` (`sse_session_id`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8mb4
@@ -61,7 +63,9 @@ CREATE TABLE `ai_session`
     `model_id`          int               DEFAULT NULL COMMENT '使用的模型ID',
     `tags`              varchar(255)      DEFAULT NULL COMMENT '标签，逗号分隔',
     `summary`           text COMMENT '对话摘要',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_user_id_last_msg_time` (`user_id`, `last_message_time` DESC),
+    KEY `ai_session_last_message_time_IDX` (`last_message_time`)
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8mb4
