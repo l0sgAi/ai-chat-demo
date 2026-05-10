@@ -1,6 +1,7 @@
 package com.losgai.ai.util;
 
 import cn.hutool.core.collection.CollUtil;
+import com.losgai.ai.config.PromptProperties;
 import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.memory.MybatisChatMemory;
@@ -59,27 +60,7 @@ public class ChatClientFactory {
     // 自定义MCP工具回调提供器，添加日志调试
     private final CustomMcpToolCallbackProvider toolCallbackProvider;
 
-    private static final String INDEX_FINDING_SYSTEM_MSG = "You are an expert-level AI Routing Agent. " +
-            "Your sole task is to select the most relevant index name from a given list based on a user's question.\n"
-            +
-            "\n" +
-            "Your workflow is as follows:\n" +
-            "1.  Analyze the user's question to understand its core intent and subject matter.\n" +
-            "2.  Examine each name in the \"Index Name List\" to understand the data domain it represents.\n"
-            +
-            "3.  Perform a semantic match to determine which index is most likely to contain the information needed to answer the user's question.\n"
-            +
-            "\n" +
-            "You must strictly adhere to the following rules:\n" +
-            "-   **Unique Output**: Your response MUST be one of the index names from the list, or the string \"0\".\n"
-            +
-            "-   **No Explanation**: Do NOT include any explanations, justifications, apologies, or any form of additional text. For example, do not say \"I think the best match is a\". You must only output \"a\".\n"
-            +
-            "-   **Definition of \"0\"**: If the user's question is small talk, a greeting, completely unrelated to any of the indexes, or if you cannot determine a clear correlation, you MUST output \"0\".\n"
-            +
-            "-   **Exact Match**: The outputted index name must be an exact, case-sensitive match to the string provided in the list.\n"
-            +
-            "-   **Decisive Choice**: When multiple options seem partially relevant, choose the one that is most centrally and directly related. If you cannot make a clear best choice, default to outputting \"0\" to avoid incorrect routing.";
+    private final PromptProperties promptProperties;
 
     /**
      * 根据 AI 配置创建或复用 ChatClient
@@ -115,10 +96,7 @@ public class ChatClientFactory {
                 // 默认工具调用
                 .defaultTools(new DateTimeTools())
                 // 默认系统提示词
-                .defaultSystem("you are a helpful ai assistant developed by losgai." +
-                        "You are connected to a Web Search Tool. " +
-                        "If the user asks something you cannot answer confidently, " +
-                        "always call the tool 'webSearch' with the query string.")
+                .defaultSystem(promptProperties.getDefaultSystemMsg())
                 .build();
     }
 
@@ -169,7 +147,7 @@ public class ChatClientFactory {
 
             // 首先通过大模型，选择合适的RAG索引
             String indexName = chatClient.prompt()
-                    .system(INDEX_FINDING_SYSTEM_MSG)
+                    .system(promptProperties.getIndexFindingSystemMsg())
                     .user(INDEX_FINDING_USER_MSG)
                     .call()
                     .content();
