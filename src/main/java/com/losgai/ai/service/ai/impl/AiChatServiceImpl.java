@@ -15,18 +15,15 @@ import com.losgai.ai.service.ai.AiChatService;
 import com.losgai.ai.util.ChatClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
+import reactor.core.Disposable;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,130 +53,103 @@ public class AiChatServiceImpl implements AiChatService {
     @Override
     public CompletableFuture<Boolean> sendQuestionAsyncWithMemo(AiChatParamDTO aiChatParamDTO,
                                                                 String sessionId) {
-        return CompletableFuture.supplyAsync(() -> {
-            if (emitterManager.isOverLoad())
-                return false;
-            // 获取会话id对应的sseEmitter
-            SseEmitter emitter = emitterManager.getEmitter(sessionId);
-            // 先发送一次队列人数通知
-            emitterManager.notifyThreadCount();
-            // 没有则先创建一个sseEmitter
-            if (emitter == null) {
-                if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
-                    emitter = emitterManager.getEmitter(sessionId);
-                } else {
-                    // 创建失败，一般是由于队列已满，直接返回false
-                    return false;
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        Thread.ofVirtual().start(() -> {
+            try {
+                if (emitterManager.isOverLoad()) {
+                    future.complete(false);
+                    return;
                 }
-            }
-            // 最终指向的emitter对象
-            SseEmitter finalEmitter = emitter;
-            StringBuffer sb = new StringBuffer();
-            // 开始对话，返回token流
-            // 封装插入的信息对象
-            AiMessagePair aiMessagePair = new AiMessagePair();
-            aiMessagePair.setSseSessionId(sessionId);
-            aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
+                SseEmitter emitter = emitterManager.getEmitter(sessionId);
+                emitterManager.notifyThreadCount();
+                if (emitter == null) {
+                    if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
+                        emitter = emitterManager.getEmitter(sessionId);
+                    } else {
+                        future.complete(false);
+                        return;
+                    }
+                }
+                SseEmitter finalEmitter = emitter;
+                // rawContent: 存库用原始文本; displaySb: SSE展示用转义文本
+                StringBuilder rawContent = new StringBuilder();
+                AiMessagePair aiMessagePair = new AiMessagePair();
+                aiMessagePair.setSseSessionId(sessionId);
+                aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
 
-            // 从数据库获取配置
-            AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
-            // 获取conversationId
-            Long conversationId = aiChatParamDTO.getConversationId();
-            if (conversationId == null) {
-                return false;
-            }
-            // 用于跟踪最后一个 ChatResponse
-            AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
-            // 用于中断对话
-            AtomicBoolean isInterrupted = new AtomicBoolean(false);
+                AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
+                if (aiConfig == null) {
+                    future.complete(false);
+                    return;
+                }
+                Long conversationId = aiChatParamDTO.getConversationId();
+                if (conversationId == null) {
+                    future.complete(false);
+                    return;
+                }
 
-            chatClientFactory.streamChat(
-                            aiConfig,
-                            aiChatParamDTO.getUrlList(),
-                            aiChatParamDTO.getQuestion(),
-                            String.valueOf(conversationId))
-                    .subscribe(
-                            token -> {
-                                // 获取当前输出内容片段
-                                if (token.getResult() != null) {
-                                    String text = "";
-                                    token.getResult();
-                                    text = token.getResult().getOutput().getText();
-                                    if (StrUtil.isNotBlank(text)) {
-                                        sb.append(text);
-                                        // log.info("当前段数据:{}", text);
-                                        // 换行符转义：token换行符转换成<br>
-                                        text = text.replace("\n", "<br>");
-                                        // 换行符转义：如果token以换行符为结尾，转换成<br>
-                                        text = text.replace(" ", "&nbsp;");
-                                    }
-                                    // 发送返回的数据
-                                    try {
+                AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
+                AtomicBoolean isInterrupted = new AtomicBoolean(false);
+                // 防止 onError/onComplete 重复清理
+                AtomicBoolean cleaned = new AtomicBoolean(false);
+                AtomicReference<Disposable> disposableRef = new AtomicReference<>();
+
+                disposableRef.set(chatClientFactory.streamChat(
+                                aiConfig,
+                                aiChatParamDTO.getUrlList(),
+                                aiChatParamDTO.getQuestion(),
+                                String.valueOf(conversationId))
+                        .subscribe(
+                                token -> {
+                                    if (token.getResult() != null) {
+                                        String text = token.getResult().getOutput().getText();
                                         if (StrUtil.isNotBlank(text)) {
-                                            // 中断条件
-                                            if (emitterManager.getEmitter(sessionId) == null) {
-                                                log.info("===>SSE已经被手动中断，执行onComplete");
-                                                isInterrupted.set(true);
-                                            } else {
-                                                finalEmitter.send(SseEmitter.event().data(text));
-                                            }
+                                            rawContent.append(text);
+                                            text = text.replace("\n", "<br>");
+                                            text = text.replace(" ", "&nbsp;");
                                         }
-                                    } catch (IOException e) {
-                                        log.error("===>SSE发送异常：{}", e.getMessage());
-                                        throw new RuntimeException(e);
+                                        try {
+                                            if (StrUtil.isNotBlank(text)) {
+                                                if (emitterManager.getEmitter(sessionId) == null) {
+                                                    log.info("===>SSE已经被手动中断，执行onComplete");
+                                                    isInterrupted.set(true);
+                                                    Disposable d = disposableRef.get();
+                                                    if (d != null) d.dispose();
+                                                } else {
+                                                    finalEmitter.send(SseEmitter.event().data(text));
+                                                }
+                                            }
+                                        } catch (IOException e) {
+                                            log.error("===>SSE发送异常", e);
+                                            throw new RuntimeException(e);
+                                        }
                                     }
-                                }
-                                // 更新最后一个响应
-                                lastResponse.set(token);
-                            },
-                            // 反应式流在报错时会直接中断
-                            e -> {
-                                log.error("ai对话 流式输出报错:{}", e.getMessage());
-                                int usageCount = 0;
-                                ChatResponse chatResponse = lastResponse.get();
-                                if (chatResponse != null) {
-                                    Usage usage = chatResponse.getMetadata().getUsage();
-                                    usageCount = usage.getTotalTokens();
-                                } else {
-                                    log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
-                                }
-                                // 更新中断的状态
-                                tryUpdateMessage(aiMessagePair,
-                                        sb.toString(),
-                                        true,
-                                        usageCount);
-                                finalEmitter.completeWithError(e);
-                                emitterManager.removeEmitter(sessionId); // 出错时也移除
-                                emitterManager.removeEmitter(String.valueOf(conversationId));
-                            }, // 错误处理
-                            () -> {// 流结束
-                                log.info("\n回答完毕！");
-                                // 从最后一个响应中获取 Token 使用信息
-                                ChatResponse chatResponse = lastResponse.get();
-                                int usageCount = 0;
-                                if (chatResponse != null) {
-                                    Usage usage = chatResponse.getMetadata().getUsage();
-                                    usageCount = usage.getTotalTokens();
-                                } else {
-                                    log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
-                                }
-                                finalEmitter.complete();
-                                emitterManager.removeEmitter(sessionId); // 只在流结束后移除
-                                emitterManager.removeEmitter(String.valueOf(conversationId));
-                                log.info("最终拼接的数据:\n{}", sb);
-                                log.info("token使用:{}", usageCount);
-                                // 更新正常完成的状态
-                                tryUpdateMessage(aiMessagePair,
-                                        sb.toString(),
-                                        isInterrupted.get(),
-                                        usageCount);
-                                // 新增部分：消息队列发送
-                                // exchange 是交换机，决定消息往哪里发。
-                                // routingKey 是路由键，告诉交换机这条消息具体发给哪个队列。
-                                aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
-                            });
-            return true;
-        }, Executors.newVirtualThreadPerTaskExecutor());
+                                    lastResponse.set(token);
+                                },
+                                e -> {
+                                    log.error("ai对话 流式输出报错", e);
+                                    int usageCount = extractUsage(lastResponse);
+                                    tryUpdateMessage(aiMessagePair, rawContent.toString(), true, usageCount);
+                                    finalEmitter.completeWithError(e);
+                                    cleanupEmitters(cleaned, sessionId, conversationId);
+                                },
+                                () -> {
+                                    log.info("回答完毕！");
+                                    int usageCount = extractUsage(lastResponse);
+                                    finalEmitter.complete();
+                                    cleanupEmitters(cleaned, sessionId, conversationId);
+                                    log.info("最终拼接的数据:\n{}", rawContent);
+                                    log.info("token使用:{}", usageCount);
+                                    tryUpdateMessage(aiMessagePair, rawContent.toString(), isInterrupted.get(), usageCount);
+                                    aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
+                                }));
+                future.complete(true);
+            } catch (Exception e) {
+                log.error("AI对话任务异常", e);
+                future.complete(false);
+            }
+        });
+        return future;
     }
 
     /**
@@ -195,6 +165,29 @@ public class AiChatServiceImpl implements AiChatService {
             return emitter;
         }
         return null;
+    }
+
+    /**
+     * 从最后一个 ChatResponse 中提取 Token 使用量
+     */
+    private int extractUsage(AtomicReference<ChatResponse> lastResponse) {
+        ChatResponse chatResponse = lastResponse.get();
+        if (chatResponse != null && chatResponse.getMetadata() != null
+                && chatResponse.getMetadata().getUsage() != null) {
+            return chatResponse.getMetadata().getUsage().getTotalTokens();
+        }
+        log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
+        return 0;
+    }
+
+    /**
+     * 安全清理 emitter，防止 onError/onComplete 竞态重复移除
+     */
+    private void cleanupEmitters(AtomicBoolean cleaned, String sessionId, Long conversationId) {
+        if (cleaned.compareAndSet(false, true)) {
+            emitterManager.removeEmitter(sessionId);
+            emitterManager.removeEmitter(String.valueOf(conversationId));
+        }
     }
 
     /**
