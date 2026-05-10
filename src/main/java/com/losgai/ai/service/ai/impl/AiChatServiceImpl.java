@@ -23,6 +23,7 @@ import reactor.core.Disposable;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -73,6 +74,7 @@ public class AiChatServiceImpl implements AiChatService {
                 SseEmitter finalEmitter = emitter;
                 // rawContent: 存库用原始文本; displaySb: SSE展示用转义文本
                 StringBuilder rawContent = new StringBuilder();
+                StringBuilder reasoningContent = new StringBuilder();
                 AiMessagePair aiMessagePair = new AiMessagePair();
                 aiMessagePair.setSseSessionId(sessionId);
                 aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
@@ -102,14 +104,34 @@ public class AiChatServiceImpl implements AiChatService {
                         .subscribe(
                                 token -> {
                                     if (token.getResult() != null) {
+                                        // 提取思考过程
+                                        Map<String, Object> metadata = token.getResult().getOutput().getMetadata();
+                                        String reasoning = metadata != null ? (String) metadata.get("reasoningContent") : null;
+                                        if (StrUtil.isNotBlank(reasoning)) {
+                                            reasoningContent.append(reasoning);
+                                            String escaped = reasoning.replace("\n", "<br>").replace(" ", "&nbsp;");
+                                            try {
+                                                if (emitterManager.getEmitter(sessionId) == null) {
+                                                    log.info("===>SSE已经被手动中断");
+                                                    isInterrupted.set(true);
+                                                    Disposable d = disposableRef.get();
+                                                    if (d != null) d.dispose();
+                                                } else {
+                                                    finalEmitter.send(SseEmitter.event().name("thinking").data(escaped));
+                                                }
+                                            } catch (IOException e) {
+                                                log.error("===>SSE发送思考内容异常", e);
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+
+                                        // 提取正式回复
                                         String text = token.getResult().getOutput().getText();
                                         if (StrUtil.isNotBlank(text)) {
                                             rawContent.append(text);
                                             text = text.replace("\n", "<br>");
                                             text = text.replace(" ", "&nbsp;");
-                                        }
-                                        try {
-                                            if (StrUtil.isNotBlank(text)) {
+                                            try {
                                                 if (emitterManager.getEmitter(sessionId) == null) {
                                                     log.info("===>SSE已经被手动中断，执行onComplete");
                                                     isInterrupted.set(true);
@@ -118,10 +140,10 @@ public class AiChatServiceImpl implements AiChatService {
                                                 } else {
                                                     finalEmitter.send(SseEmitter.event().data(text));
                                                 }
+                                            } catch (IOException e) {
+                                                log.error("===>SSE发送异常", e);
+                                                throw new RuntimeException(e);
                                             }
-                                        } catch (IOException e) {
-                                            log.error("===>SSE发送异常", e);
-                                            throw new RuntimeException(e);
                                         }
                                     }
                                     lastResponse.set(token);
@@ -129,7 +151,8 @@ public class AiChatServiceImpl implements AiChatService {
                                 e -> {
                                     log.error("ai对话 流式输出报错", e);
                                     int usageCount = extractUsage(lastResponse);
-                                    tryUpdateMessage(aiMessagePair, rawContent.toString(), true, usageCount);
+                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                    tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
                                     finalEmitter.completeWithError(e);
                                     cleanupEmitters(cleaned, sessionId, conversationId);
                                 },
@@ -138,9 +161,10 @@ public class AiChatServiceImpl implements AiChatService {
                                     int usageCount = extractUsage(lastResponse);
                                     finalEmitter.complete();
                                     cleanupEmitters(cleaned, sessionId, conversationId);
-                                    log.info("最终拼接的数据:\n{}", rawContent);
+                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                    log.info("最终拼接的数据:\n{}", finalContent);
                                     log.info("token使用:{}", usageCount);
-                                    tryUpdateMessage(aiMessagePair, rawContent.toString(), isInterrupted.get(), usageCount);
+                                    tryUpdateMessage(aiMessagePair, finalContent, isInterrupted.get(), usageCount);
                                     aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
                                 }));
                 future.complete(true);
@@ -207,6 +231,17 @@ public class AiChatServiceImpl implements AiChatService {
         aiSession.setId(message.getSessionId());
         aiSession.setLastMessageTime(message.getResponseTime());
         aiSessionMapper.updateByPrimaryKeySelective(aiSession);
+    }
+
+    /**
+     * 拼接思考过程和正式回复，思考过程用 <thinking> 标签包裹
+     */
+    private String buildFinalContent(StringBuilder rawContent, StringBuilder reasoningContent) {
+        String reasoning = reasoningContent.toString();
+        if (StrUtil.isNotBlank(reasoning)) {
+            return "<thinking>" + reasoning + "</thinking>" + rawContent;
+        }
+        return rawContent.toString();
     }
 
 }
