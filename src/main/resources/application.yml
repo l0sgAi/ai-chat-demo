@@ -1,4 +1,7 @@
 spring:
+  mvc:
+    async:
+      request-timeout: 300000 # 单位毫秒，例如设置为5分钟
   ai:
     vectorstore:
       elasticsearch:
