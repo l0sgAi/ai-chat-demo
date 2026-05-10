@@ -110,7 +110,7 @@ public class ChatClientFactory {
             String conversationId) {
         // 状态通知的sse
         if (sseEmitterManager.getEmitter(conversationId) == null) {
-            sseEmitterManager.addEmitter(conversationId, new SseEmitter(30000L));
+            sseEmitterManager.addEmitter(conversationId, new SseEmitter(600000L));
         }
         SseEmitter emitter = sseEmitterManager.getEmitter(conversationId);
         try {

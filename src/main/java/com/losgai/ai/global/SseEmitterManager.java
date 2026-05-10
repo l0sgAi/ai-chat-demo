@@ -1,6 +1,8 @@
 package com.losgai.ai.global;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -13,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 @Slf4j
+@EnableScheduling
 public class SseEmitterManager {
     // 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
     private static final int SESSION_LIMIT = 101;
@@ -58,7 +61,22 @@ public class SseEmitterManager {
      */
     public void addThreadMonitor() {
         // 添加一个线程监控
-        emitterMap.put("thread-monitor", new SseEmitter(0L));
+        emitterMap.put("thread-monitor", new SseEmitter(600000L));
+    }
+
+    /**
+     * 心跳保活，每15秒向所有活跃SSE连接发送注释事件
+     */
+    @Scheduled(fixedRate = 15000)
+    public void heartbeat() {
+        for (Map.Entry<String, SseEmitter> entry : emitterMap.entrySet()) {
+            try {
+                entry.getValue().send(SseEmitter.event().comment("heartbeat"));
+            } catch (IOException e) {
+                log.debug("心跳发送失败, 移除: {}", entry.getKey());
+                emitterMap.remove(entry.getKey());
+            }
+        }
     }
 
     /**

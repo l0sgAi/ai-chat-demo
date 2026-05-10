@@ -64,7 +64,7 @@ public class AiChatServiceImpl implements AiChatService {
                 SseEmitter emitter = emitterManager.getEmitter(sessionId);
                 emitterManager.notifyThreadCount();
                 if (emitter == null) {
-                    if (emitterManager.addEmitter(sessionId, new SseEmitter(0L))) {
+                    if (emitterManager.addEmitter(sessionId, new SseEmitter(600000L))) {
                         emitter = emitterManager.getEmitter(sessionId);
                     } else {
                         future.complete(false);
@@ -72,6 +72,11 @@ public class AiChatServiceImpl implements AiChatService {
                     }
                 }
                 SseEmitter finalEmitter = emitter;
+                finalEmitter.onCompletion(() -> emitterManager.removeEmitter(sessionId));
+                finalEmitter.onTimeout(() -> {
+                    log.warn("SSE emitter 超时, sessionId: {}", sessionId);
+                    emitterManager.removeEmitter(sessionId);
+                });
                 // rawContent: 存库用原始文本; displaySb: SSE展示用转义文本
                 StringBuilder rawContent = new StringBuilder();
                 StringBuilder reasoningContent = new StringBuilder();

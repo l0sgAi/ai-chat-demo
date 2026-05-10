@@ -119,3 +119,7 @@ ai-chat-demo:
       you are a helpful assistant, do whatever you need to meet the user's needs.
 server:
   port: 8575
+  tomcat:
+    connection-timeout: 120000
+    keep-alive-timeout: 600000
+    max-keep-alive-requests: -1
