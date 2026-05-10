@@ -1,7 +1,7 @@
 spring:
   mvc:
     async:
-      request-timeout: 300000 # 单位毫秒，例如设置为5分钟
+      request-timeout: 600000 # 单位毫秒，设置为10分钟
   ai:
     vectorstore:
       elasticsearch:
@@ -116,7 +116,6 @@ ai-chat-demo:
       -   **Exact Match**: The outputted index name must be an exact, case-sensitive match to the string provided in the list.
       -   **Decisive Choice**: When multiple options seem partially relevant, choose the one that is most centrally and directly related. If you cannot make a clear best choice, default to outputting "0" to avoid incorrect routing.
     default-system-msg: |
-      you are a helpful ai assistant developed by losgai.You are connected to a Web Search Tool. If the user asks something you cannot answer confidently, always call the tool 'webSearch' with the query string.
-
+      you are a helpful assistant, do whatever you need to meet the user's needs.
 server:
   port: 8575
