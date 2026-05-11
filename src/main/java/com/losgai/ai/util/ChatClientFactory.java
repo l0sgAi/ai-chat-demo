@@ -196,7 +196,7 @@ public class ChatClientFactory {
 
             if (retrievalAugmentationAdvisor == null) {
                 return chatClient.prompt()
-//                        .toolCallbacks(toolCallbacks)
+                        .toolCallbacks(toolCallbacks)
                         .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                         .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                         .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
@@ -204,7 +204,7 @@ public class ChatClientFactory {
                         .chatResponse();
             }
             return chatClient.prompt()
-//                    .toolCallbacks(toolCallbacks)
+                    .toolCallbacks(toolCallbacks)
                     .user(u -> u.text(userMsg).media(mediaList.toArray(new Media[0])))
                     .advisors(MessageChatMemoryAdvisor.builder(mybatisChatMemory).build())
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
