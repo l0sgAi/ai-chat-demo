@@ -1,6 +1,7 @@
 package com.losgai.ai.global;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,8 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @EnableScheduling
 public class SseEmitterManager {
-    // 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
-    private static final int SESSION_LIMIT = 101;
+    // 支持的同时在线人数=sessionLimit-1 有一个监控sse
+    @Value("${ai-chat-demo.sse.session-limit:101}")
+    private int sessionLimit;
 
     private final Map<String, SseEmitter> emitterMap = new ConcurrentHashMap<>();
 
@@ -26,7 +28,7 @@ public class SseEmitterManager {
      * 将对话请求加入队列
      */
     public boolean addEmitter(String sessionId, SseEmitter emitter) {
-        if (emitterMap.size() < SESSION_LIMIT) {
+        if (emitterMap.size() < sessionLimit) {
             emitterMap.put(sessionId, emitter);
             // 推流当前线程数
             this.notifyThreadCount();
@@ -49,7 +51,7 @@ public class SseEmitterManager {
     }
 
     public boolean isOverLoad() {
-        return emitterMap.size() >= SESSION_LIMIT;
+        return emitterMap.size() >= sessionLimit;
     }
 
     public int getEmitterCount() {
