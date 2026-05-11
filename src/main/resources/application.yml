@@ -117,6 +117,7 @@ ai-chat-demo:
       -   **Definition of "0"**: If the user's question is small talk, a greeting, completely unrelated to any of the indexes, or if you cannot determine a clear correlation, you MUST output "0".
       -   **Exact Match**: The outputted index name must be an exact, case-sensitive match to the string provided in the list.
       -   **Decisive Choice**: When multiple options seem partially relevant, choose the one that is most centrally and directly related. If you cannot make a clear best choice, default to outputting "0" to avoid incorrect routing.
+      -   **Don't Overthink**: When there is no relevant index, output "0".
     default-system-msg: |
       you are a helpful assistant, do whatever you need to meet the user's needs.
 server:
