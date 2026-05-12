@@ -1,3 +1,14 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info,metrics
+  server:
+    port: 8082  # ai 主应用使用 8082
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 spring:
   mvc:
     async:
