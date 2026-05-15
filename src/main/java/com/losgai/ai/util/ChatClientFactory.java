@@ -16,7 +16,6 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.content.Media;
-import org.springframework.ai.mcp.AsyncMcpToolCallbackProvider;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -67,6 +66,24 @@ public class ChatClientFactory {
      */
     public ChatClient getOrCreateClient(AiConfig aiConfig) {
         return clientCache.computeIfAbsent(aiConfig.getId(), k -> createClient(aiConfig));
+    }
+
+    /**
+     * 淘汰指定配置ID的ChatClient缓存
+     */
+    public void evictClient(Integer configId) {
+        ChatClient removed = clientCache.remove(configId);
+        if (removed != null) {
+            log.info("已淘汰配置ID={}的ChatClient缓存", configId);
+        }
+    }
+
+    /**
+     * 清空全部ChatClient缓存
+     */
+    public void evictAllClients() {
+        clientCache.clear();
+        log.info("已清空全部ChatClient缓存");
     }
 
     /**

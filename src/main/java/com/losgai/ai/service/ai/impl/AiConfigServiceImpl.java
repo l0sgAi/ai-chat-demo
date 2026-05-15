@@ -4,6 +4,7 @@ import com.losgai.ai.entity.ai.AiConfig;
 import com.losgai.ai.enums.ResultCodeEnum;
 import com.losgai.ai.mapper.AiConfigMapper;
 import com.losgai.ai.service.ai.AiConfigService;
+import com.losgai.ai.util.ChatClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,6 +22,7 @@ import java.util.List;
 public class AiConfigServiceImpl implements AiConfigService {
 
     private final AiConfigMapper aiConfigMapper;
+    private final ChatClientFactory chatClientFactory;
 
     @Override
     @Transactional
@@ -45,6 +47,7 @@ public class AiConfigServiceImpl implements AiConfigService {
     @CacheEvict(value = "models",allEntries = true)
     public ResultCodeEnum deleteById(Long id) {
         aiConfigMapper.deleteByPrimaryKey(id);
+        chatClientFactory.evictClient(id.intValue());
         return ResultCodeEnum.SUCCESS;
     }
 
@@ -57,6 +60,7 @@ public class AiConfigServiceImpl implements AiConfigService {
             // 排除其他默认
             aiConfigMapper.updateOtherIsNotDefault(aiConfig.getId());
         }
+        chatClientFactory.evictClient(aiConfig.getId());
         return ResultCodeEnum.SUCCESS;
     }
 
