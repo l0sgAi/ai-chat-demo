@@ -14,7 +14,7 @@ public class AiChatParamDTO {
      * 对话会话id
      */
     @Schema(description = "对话会话id")
-    private Long chatSessionId;
+    private String chatSessionId;
 
     /**
      * 对话id
