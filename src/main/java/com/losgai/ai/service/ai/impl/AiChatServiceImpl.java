@@ -95,6 +95,21 @@ public class AiChatServiceImpl implements AiChatService {
                     return;
                 }
 
+                // 在流式订阅前同步INSERT，消除前端INSERT与后端UPDATE的竞态
+                aiMessagePair.setUserContent(aiChatParamDTO.getQuestion());
+                aiMessagePair.setModelUsed(aiChatParamDTO.getModelId());
+                aiMessagePair.setStatus(AiMessageStatusEnum.GENERATING.getCode());
+                aiMessagePair.setCreateTime(Date.from(Instant.now()));
+                aiMessagePairMapper.insertSelective(aiMessagePair);
+                // 更新会话最后消息时间
+                AiSession sessionUpdate = new AiSession();
+                sessionUpdate.setId(aiMessagePair.getSessionId());
+                sessionUpdate.setLastMessageTime(aiMessagePair.getCreateTime());
+                aiSessionMapper.updateByPrimaryKeySelective(sessionUpdate);
+
+                // 提前完成future，释放Tomcat线程
+                future.complete(true);
+
                 AtomicReference<ChatResponse> lastResponse = new AtomicReference<>();
                 AtomicBoolean isInterrupted = new AtomicBoolean(false);
                 // 防止 onError/onComplete 重复清理
@@ -125,8 +140,18 @@ public class AiChatServiceImpl implements AiChatService {
                                                     finalEmitter.send(SseEmitter.event().name("thinking").data(escaped));
                                                 }
                                             } catch (IOException e) {
-                                                log.error("===>SSE发送思考内容异常", e);
-                                                throw new RuntimeException(e);
+                                                log.debug("SSE发送思考内容失败, 客户端可能已断开, sessionId: {}", sessionId);
+                                                if (cleaned.compareAndSet(false, true)) {
+                                                    isInterrupted.set(true);
+                                                    Disposable d = disposableRef.get();
+                                                    if (d != null) d.dispose();
+                                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                                    int usageCount = extractUsage(lastResponse);
+                                                    tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
+                                                    emitterManager.removeEmitter(sessionId);
+                                                    emitterManager.removeEmitter(String.valueOf(conversationId));
+                                                }
+                                                return;
                                             }
                                         }
 
@@ -146,33 +171,65 @@ public class AiChatServiceImpl implements AiChatService {
                                                     finalEmitter.send(SseEmitter.event().data(text));
                                                 }
                                             } catch (IOException e) {
-                                                log.error("===>SSE发送异常", e);
-                                                throw new RuntimeException(e);
+                                                log.debug("SSE发送失败, 客户端可能已断开, sessionId: {}", sessionId);
+                                                if (cleaned.compareAndSet(false, true)) {
+                                                    isInterrupted.set(true);
+                                                    Disposable d = disposableRef.get();
+                                                    if (d != null) d.dispose();
+                                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                                    int usageCount = extractUsage(lastResponse);
+                                                    tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
+                                                    emitterManager.removeEmitter(sessionId);
+                                                    emitterManager.removeEmitter(String.valueOf(conversationId));
+                                                }
+                                                return;
                                             }
                                         }
                                     }
                                     lastResponse.set(token);
                                 },
                                 e -> {
-                                    log.error("ai对话 流式输出报错", e);
-                                    int usageCount = extractUsage(lastResponse);
-                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
-                                    tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
-                                    finalEmitter.completeWithError(e);
+                                    if (isClientDisconnect(e)) {
+                                        log.debug("客户端已断开连接, sessionId: {}", sessionId);
+                                    } else {
+                                        log.error("ai对话 流式输出报错, sessionId: {}", sessionId, e);
+                                    }
+                                    try {
+                                        int usageCount = extractUsage(lastResponse);
+                                        String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                        tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
+                                    } catch (Exception ex) {
+                                        log.error("onError内更新消息失败, sessionId={}", sessionId, ex);
+                                    }
+                                    try {
+                                        finalEmitter.completeWithError(e);
+                                    } catch (Exception ignored) {}
                                     cleanupEmitters(cleaned, sessionId, conversationId);
                                 },
                                 () -> {
                                     log.info("回答完毕！");
-                                    int usageCount = extractUsage(lastResponse);
+                                    try {
+                                        int usageCount = extractUsage(lastResponse);
+                                        String finalContent = buildFinalContent(rawContent, reasoningContent);
+                                        log.info("最终拼接的数据:\n{}", finalContent);
+                                        log.info("token使用:{}", usageCount);
+                                        tryUpdateMessage(aiMessagePair, finalContent, isInterrupted.get(), usageCount);
+                                    } catch (Exception ex) {
+                                        log.error("onComplete内更新消息失败, sessionId={}", sessionId, ex);
+                                    }
                                     finalEmitter.complete();
                                     cleanupEmitters(cleaned, sessionId, conversationId);
-                                    String finalContent = buildFinalContent(rawContent, reasoningContent);
-                                    log.info("最终拼接的数据:\n{}", finalContent);
-                                    log.info("token使用:{}", usageCount);
-                                    tryUpdateMessage(aiMessagePair, finalContent, isInterrupted.get(), usageCount);
-                                    aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
+                                    try {
+                                        AiMessagePair record = aiMessagePairMapper.selectBySseSessionId(sessionId);
+                                        if (record != null) {
+                                            aiMessageSender.sendMessage("ai.exchange", "ai.message", record);
+                                        } else {
+                                            log.warn("onComplete: selectBySseSessionId返回null, sessionId={}", sessionId);
+                                        }
+                                    } catch (Exception ex) {
+                                        log.error("onComplete内发送MQ消息失败, sessionId={}", sessionId, ex);
+                                    }
                                 }));
-                future.complete(true);
             } catch (Exception e) {
                 log.error("AI对话任务异常", e);
                 future.complete(false);
@@ -207,6 +264,21 @@ public class AiChatServiceImpl implements AiChatService {
         }
         log.warn("未获取到 Token 使用信息，可能模型未返回或配置未启用");
         return 0;
+    }
+
+    private boolean isClientDisconnect(Throwable e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause instanceof org.springframework.web.context.request.async.AsyncRequestNotUsableException) {
+                return true;
+            }
+            String msg = cause.getMessage();
+            if (msg != null && msg.contains("中止了一个已建立的连接")) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 
     /**
