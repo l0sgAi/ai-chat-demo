@@ -167,8 +167,8 @@ public class AiChatServiceImpl implements AiChatService {
                                     finalEmitter.complete();
                                     cleanupEmitters(cleaned, sessionId, conversationId);
                                     String finalContent = buildFinalContent(rawContent, reasoningContent);
-                                    log.info("最终拼接的数据:\n{}", finalContent);
-                                    log.info("token使用:{}", usageCount);
+                                    log.debug("最终拼接的数据:\n{}", finalContent);
+                                    log.debug("token使用:{}", usageCount);
                                     tryUpdateMessage(aiMessagePair, finalContent, isInterrupted.get(), usageCount);
                                     aiMessageSender.sendMessage("ai.exchange", "ai.message", aiMessagePairMapper.selectBySseSessionId(sessionId));
                                 }));

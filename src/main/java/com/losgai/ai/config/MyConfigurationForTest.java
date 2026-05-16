@@ -18,12 +18,12 @@ class MyConfigurationForTest {
 
             @Override
             public void onRequest(ChatModelRequestContext requestContext) {
-                log.info("onRequest(): {}", requestContext.request());
+                log.debug("onRequest(): {}", requestContext.request());
             }
 
             @Override
             public void onResponse(ChatModelResponseContext responseContext) {
-                log.info("onResponse(): {}", responseContext.response());
+                log.debug("onResponse(): {}", responseContext.response());
             }
 
             @Override

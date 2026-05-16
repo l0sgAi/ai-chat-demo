@@ -68,21 +68,16 @@ spring:
 
 logging:
   level:
-    sql: debug
-    web: debug
-    # Spring AI MCP 相关日志
-    org.springframework.ai.mcp: DEBUG
-    org.springframework.ai.mcp.client: TRACE
-    org.springframework.ai.chat.model: DEBUG
-
-    # WebClient 日志（查看 HTTP 请求）
-    org.springframework.web.reactive.function.client: DEBUG
-
-    # Reactor Netty 日志（查看底层网络通信）
-    reactor.netty.http.client: DEBUG
-
-    # Jackson 日志（查看 JSON 解析）
-    com.fasterxml.jackson: DEBUG
+    root: warn
+    com.losgai: info
+    sql: warn
+    web: warn
+    org.springframework.ai.mcp: warn
+    org.springframework.ai.mcp.client: warn
+    org.springframework.ai.chat.model: warn
+    org.springframework.web.reactive.function.client: warn
+    reactor.netty.http.client: warn
+    com.fasterxml.jackson: warn
 
 #Sa-Token 配置
 sa-token:

@@ -29,7 +29,7 @@ public class SaTokenConfigure {
 
                 // 认证函数: 每次请求执行 
                 .setAuth(obj -> {
-                    log.info("---------- 进入Sa-Token全局认证 -----------");
+                    log.debug("---------- 进入Sa-Token全局认证 -----------");
                     // 登录认证 -- 拦截所有路由，并排除/auth 用于开放登录与注册
                     SaRouter.match("/**", "/sys/user/auth/**", StpUtil::checkLogin);
 
@@ -65,7 +65,7 @@ public class SaTokenConfigure {
 
                     // 如果是预检请求，则立即返回到前端
                     SaRouter.match(SaHttpMethod.OPTIONS)
-                            .free(res -> log.info("[OPTIONS]预检请求，不做处理"))
+                            .free(res -> log.debug("[OPTIONS]预检请求，不做处理"))
                             .back();
                     ;
                 })
