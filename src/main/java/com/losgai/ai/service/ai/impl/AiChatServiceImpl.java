@@ -82,7 +82,7 @@ public class AiChatServiceImpl implements AiChatService {
                 StringBuilder reasoningContent = new StringBuilder();
                 AiMessagePair aiMessagePair = new AiMessagePair();
                 aiMessagePair.setSseSessionId(sessionId);
-                aiMessagePair.setSessionId(aiChatParamDTO.getChatSessionId());
+                aiMessagePair.setSessionId(aiChatParamDTO.getConversationId());
 
                 AiConfig aiConfig = aiConfigMapper.selectByPrimaryKey(aiChatParamDTO.getModelId());
                 if (aiConfig == null) {
