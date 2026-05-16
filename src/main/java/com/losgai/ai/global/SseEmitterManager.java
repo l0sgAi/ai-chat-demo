@@ -10,6 +10,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 统一处理sse连接
@@ -23,18 +24,22 @@ public class SseEmitterManager {
     private int sessionLimit;
 
     private final Map<String, SseEmitter> emitterMap = new ConcurrentHashMap<>();
+    private final AtomicInteger emitterCount = new AtomicInteger(0);
 
     /**
-     * 将对话请求加入队列
+     * 将对话请求加入队列（原子操作，防止TOCTOU竞态）
      */
     public boolean addEmitter(String sessionId, SseEmitter emitter) {
-        if (emitterMap.size() < sessionLimit) {
-            emitterMap.put(sessionId, emitter);
-            // 推流当前线程数
-            this.notifyThreadCount();
-            return true;
+        if (emitterCount.incrementAndGet() > sessionLimit) {
+            emitterCount.decrementAndGet();
+            return false;
         }
-        return false;
+        if (emitterMap.putIfAbsent(sessionId, emitter) != null) {
+            emitterCount.decrementAndGet();
+            return false;
+        }
+        this.notifyThreadCount();
+        return true;
     }
 
     /**
@@ -45,25 +50,27 @@ public class SseEmitterManager {
     }
 
     public void removeEmitter(String sessionId) {
-        emitterMap.remove(sessionId);
-        // 推流当前线程数
-        this.notifyThreadCount();
+        if (emitterMap.remove(sessionId) != null) {
+            emitterCount.decrementAndGet();
+            this.notifyThreadCount();
+        }
     }
 
     public boolean isOverLoad() {
-        return emitterMap.size() >= sessionLimit;
+        return emitterCount.get() >= sessionLimit;
     }
 
     public int getEmitterCount() {
-        return emitterMap.size();
+        return emitterCount.get();
     }
     
     /**
      * 获取线程监控实例
      */
     public void addThreadMonitor() {
-        // 添加一个线程监控
-        emitterMap.put("thread-monitor", new SseEmitter(600000L));
+        if (emitterMap.putIfAbsent("thread-monitor", new SseEmitter(600000L)) == null) {
+            emitterCount.incrementAndGet();
+        }
     }
 
     /**
@@ -74,9 +81,22 @@ public class SseEmitterManager {
         for (Map.Entry<String, SseEmitter> entry : emitterMap.entrySet()) {
             try {
                 entry.getValue().send(SseEmitter.event().comment("heartbeat"));
-            } catch (IOException e) {
-                log.debug("心跳发送失败, 移除: {}", entry.getKey());
-                emitterMap.remove(entry.getKey());
+            } catch (IOException | IllegalStateException e) {
+                // AsyncRequestNotUsableException是IOException的子类,会被这里捕获
+                log.debug("心跳发送失败, 客户端已断开, sessionId: {}", entry.getKey());
+                // 原子移除，避免并发问题
+                if (emitterMap.remove(entry.getKey()) != null) {
+                    emitterCount.decrementAndGet();
+                    log.debug("已移除断开的SSE连接, sessionId: {}, 当前连接数: {}", 
+                            entry.getKey(), emitterCount.get());
+                }
+            } catch (Exception e) {
+                // 捕获其他未知异常，防止心跳任务中断
+                log.warn("心跳发送发生未知异常, sessionId: {}, 错误: {}", 
+                        entry.getKey(), e.getMessage());
+                if (emitterMap.remove(entry.getKey()) != null) {
+                    emitterCount.decrementAndGet();
+                }
             }
         }
     }
@@ -95,8 +115,10 @@ public class SseEmitterManager {
                 sseEmitter.send(this.getEmitterCount());
             }
         } catch (IOException e) {
-            sseEmitter.completeWithError(e);
-            emitterMap.remove("thread-monitor"); // 清除失效连接
+            log.debug("线程监控发送失败: {}", e.getMessage());
+            if (emitterMap.remove("thread-monitor") != null) {
+                emitterCount.decrementAndGet();
+            }
         }
     }
 
@@ -108,6 +130,7 @@ public class SseEmitterManager {
             emitter.complete();
         }
         emitterMap.clear();
+        emitterCount.set(0);
     }
 
 }
