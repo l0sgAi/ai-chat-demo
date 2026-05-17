@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 统一处理sse连接
@@ -26,6 +27,12 @@ public class SseEmitterManager {
     private final Map<String, SseEmitter> emitterMap = new ConcurrentHashMap<>();
     private final AtomicInteger emitterCount = new AtomicInteger(0);
 
+    // 活跃度追踪：记录每个emitter最后写入时间戳
+    private final Map<String, AtomicLong> lastActivityMap = new ConcurrentHashMap<>();
+
+    // 心跳只对超过此阈值(毫秒)无活动的emitter发送探测
+    private static final long HEARTBEAT_IDLE_THRESHOLD_MS = 10_000L;
+
     /**
      * 将对话请求加入队列（原子操作，防止TOCTOU竞态）
      */
@@ -38,6 +45,7 @@ public class SseEmitterManager {
             emitterCount.decrementAndGet();
             return false;
         }
+        lastActivityMap.put(sessionId, new AtomicLong(System.currentTimeMillis()));
         this.notifyThreadCount();
         return true;
     }
@@ -52,6 +60,7 @@ public class SseEmitterManager {
     public void removeEmitter(String sessionId) {
         if (emitterMap.remove(sessionId) != null) {
             emitterCount.decrementAndGet();
+            lastActivityMap.remove(sessionId);
             this.notifyThreadCount();
         }
     }
@@ -63,7 +72,17 @@ public class SseEmitterManager {
     public int getEmitterCount() {
         return emitterCount.get();
     }
-    
+
+    /**
+     * 更新emitter活跃时间戳，每次推流写入前调用
+     */
+    public void touchActivity(String sessionId) {
+        AtomicLong ts = lastActivityMap.get(sessionId);
+        if (ts != null) {
+            ts.set(System.currentTimeMillis());
+        }
+    }
+
     /**
      * 获取线程监控实例
      */
@@ -74,28 +93,38 @@ public class SseEmitterManager {
     }
 
     /**
-     * 心跳保活，每15秒向所有活跃SSE连接发送注释事件
+     * 心跳保活，每15秒向空闲的SSE连接发送注释事件
+     * 跳过正在活跃推流的emitter，避免并发写冲突
      */
     @Scheduled(fixedRate = 15000)
     public void heartbeat() {
+        long now = System.currentTimeMillis();
         for (Map.Entry<String, SseEmitter> entry : emitterMap.entrySet()) {
+            String key = entry.getKey();
+            AtomicLong lastActivity = lastActivityMap.get(key);
+
+            // 跳过正在活跃推流的emitter（10秒内有写入）
+            if (lastActivity != null
+                    && (now - lastActivity.get()) < HEARTBEAT_IDLE_THRESHOLD_MS) {
+                continue;
+            }
+
             try {
                 entry.getValue().send(SseEmitter.event().comment("heartbeat"));
             } catch (IOException | IllegalStateException e) {
-                // AsyncRequestNotUsableException是IOException的子类,会被这里捕获
-                log.debug("心跳发送失败, 客户端已断开, sessionId: {}", entry.getKey());
-                // 原子移除，避免并发问题
-                if (emitterMap.remove(entry.getKey()) != null) {
+                log.debug("心跳发送失败, 客户端已断开, sessionId: {}", key);
+                if (emitterMap.remove(key) != null) {
                     emitterCount.decrementAndGet();
-                    log.debug("已移除断开的SSE连接, sessionId: {}, 当前连接数: {}", 
-                            entry.getKey(), emitterCount.get());
+                    lastActivityMap.remove(key);
+                    log.debug("已移除断开的SSE连接, sessionId: {}, 当前连接数: {}",
+                            key, emitterCount.get());
                 }
             } catch (Exception e) {
-                // 捕获其他未知异常，防止心跳任务中断
-                log.warn("心跳发送发生未知异常, sessionId: {}, 错误: {}", 
-                        entry.getKey(), e.getMessage());
-                if (emitterMap.remove(entry.getKey()) != null) {
+                log.warn("心跳发送发生未知异常, sessionId: {}, 错误: {}",
+                        key, e.getMessage());
+                if (emitterMap.remove(key) != null) {
                     emitterCount.decrementAndGet();
+                    lastActivityMap.remove(key);
                 }
             }
         }
@@ -107,12 +136,14 @@ public class SseEmitterManager {
     public void notifyThreadCount() {
         SseEmitter sseEmitter = emitterMap.get("thread-monitor");
         try {
-            if (emitterMap.containsKey("thread-monitor")) {
+            if (sseEmitter != null) {
                 sseEmitter.send(this.getEmitterCount());
-            }else {
+            } else {
                 addThreadMonitor();
                 sseEmitter = emitterMap.get("thread-monitor");
-                sseEmitter.send(this.getEmitterCount());
+                if (sseEmitter != null) {
+                    sseEmitter.send(this.getEmitterCount());
+                }
             }
         } catch (IOException e) {
             log.debug("线程监控发送失败: {}", e.getMessage());
@@ -130,6 +161,7 @@ public class SseEmitterManager {
             emitter.complete();
         }
         emitterMap.clear();
+        lastActivityMap.clear();
         emitterCount.set(0);
     }
 

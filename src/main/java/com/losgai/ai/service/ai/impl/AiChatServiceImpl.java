@@ -120,7 +120,8 @@ public class AiChatServiceImpl implements AiChatService {
                                 aiConfig,
                                 aiChatParamDTO.getUrlList(),
                                 aiChatParamDTO.getQuestion(),
-                                String.valueOf(conversationId))
+                                String.valueOf(conversationId),
+                                finalEmitter)
                         .subscribe(
                                 token -> {
                                     if (token.getResult() != null) {
@@ -137,6 +138,7 @@ public class AiChatServiceImpl implements AiChatService {
                                                     Disposable d = disposableRef.get();
                                                     if (d != null) d.dispose();
                                                 } else {
+                                                    emitterManager.touchActivity(sessionId);
                                                     finalEmitter.send(SseEmitter.event().name("thinking").data(escaped));
                                                 }
                                             } catch (IOException e) {
@@ -149,7 +151,6 @@ public class AiChatServiceImpl implements AiChatService {
                                                     int usageCount = extractUsage(lastResponse);
                                                     tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
                                                     emitterManager.removeEmitter(sessionId);
-                                                    emitterManager.removeEmitter(String.valueOf(conversationId));
                                                 }
                                                 return;
                                             }
@@ -168,6 +169,7 @@ public class AiChatServiceImpl implements AiChatService {
                                                     Disposable d = disposableRef.get();
                                                     if (d != null) d.dispose();
                                                 } else {
+                                                    emitterManager.touchActivity(sessionId);
                                                     finalEmitter.send(SseEmitter.event().data(text));
                                                 }
                                             } catch (IOException e) {
@@ -180,7 +182,6 @@ public class AiChatServiceImpl implements AiChatService {
                                                     int usageCount = extractUsage(lastResponse);
                                                     tryUpdateMessage(aiMessagePair, finalContent, true, usageCount);
                                                     emitterManager.removeEmitter(sessionId);
-                                                    emitterManager.removeEmitter(String.valueOf(conversationId));
                                                 }
                                                 return;
                                             }
@@ -204,7 +205,7 @@ public class AiChatServiceImpl implements AiChatService {
                                     try {
                                         finalEmitter.completeWithError(e);
                                     } catch (Exception ignored) {}
-                                    cleanupEmitters(cleaned, sessionId, conversationId);
+                                    cleanupEmitters(cleaned, sessionId);
                                 },
                                 () -> {
                                     log.info("回答完毕！");
@@ -218,7 +219,7 @@ public class AiChatServiceImpl implements AiChatService {
                                         log.error("onComplete内更新消息失败, sessionId={}", sessionId, ex);
                                     }
                                     finalEmitter.complete();
-                                    cleanupEmitters(cleaned, sessionId, conversationId);
+                                    cleanupEmitters(cleaned, sessionId);
                                     try {
                                         AiMessagePair record = aiMessagePairMapper.selectBySseSessionId(sessionId);
                                         if (record != null) {
@@ -284,10 +285,9 @@ public class AiChatServiceImpl implements AiChatService {
     /**
      * 安全清理 emitter，防止 onError/onComplete 竞态重复移除
      */
-    private void cleanupEmitters(AtomicBoolean cleaned, String sessionId, Long conversationId) {
+    private void cleanupEmitters(AtomicBoolean cleaned, String sessionId) {
         if (cleaned.compareAndSet(false, true)) {
             emitterManager.removeEmitter(sessionId);
-            emitterManager.removeEmitter(String.valueOf(conversationId));
         }
     }
 

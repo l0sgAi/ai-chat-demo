@@ -107,7 +107,7 @@ ai-chat-demo:
     secretKey: admin123456
     bucketName: ai-chat-multimodel-bucket
   sse:
-    session-limit: 101  # 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
+    session-limit: 200  # 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
   prompts:
     index-finding-system-msg: |
       You are an expert-level AI Routing Agent. Your sole task is to select the most relevant index name from a given list based on a user's question.

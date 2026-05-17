@@ -124,14 +124,11 @@ public class ChatClientFactory {
             AiConfig aiConfig,
             List<String> urlList,
             String userMsg,
-            String conversationId) {
-        // 状态通知的sse
-        if (sseEmitterManager.getEmitter(conversationId) == null) {
-            sseEmitterManager.addEmitter(conversationId, new SseEmitter(600000L));
-        }
-        SseEmitter emitter = sseEmitterManager.getEmitter(conversationId);
+            String conversationId,
+            SseEmitter emitter) {
+        // 使用外部传入的emitter发送状态通知，不再自建，消除双emitter
         try {
-            emitter.send("正在连接服务器...");
+            emitter.send(SseEmitter.event().name("status").data("正在连接服务器..."));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -151,7 +148,7 @@ public class ChatClientFactory {
         if (CollUtil.isNotEmpty(indexes)) {
 
             try {
-                emitter.send("正在检索知识库...");
+                emitter.send(SseEmitter.event().name("status").data("正在检索知识库..."));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -192,7 +189,7 @@ public class ChatClientFactory {
         }
 
         try {
-            emitter.send("正在检索...");
+            emitter.send(SseEmitter.event().name("status").data("正在检索..."));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
