@@ -16,6 +16,7 @@ import com.losgai.ai.util.ChatClientFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.Disposable;
@@ -44,6 +45,8 @@ public class AiChatServiceImpl implements AiChatService {
     private final AiMessageSender aiMessageSender;
 
     private final ChatClientFactory chatClientFactory;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * @param aiChatParamDTO 对话参数
@@ -101,6 +104,8 @@ public class AiChatServiceImpl implements AiChatService {
                 aiMessagePair.setStatus(AiMessageStatusEnum.GENERATING.getCode());
                 aiMessagePair.setCreateTime(Date.from(Instant.now()));
                 aiMessagePairMapper.insertSelective(aiMessagePair);
+                // 清除该会话的消息缓存
+                redisTemplate.delete("aiMessagePairCache::" + aiMessagePair.getSessionId());
                 // 更新会话最后消息时间
                 AiSession sessionUpdate = new AiSession();
                 sessionUpdate.setId(aiMessagePair.getSessionId());
@@ -304,6 +309,8 @@ public class AiChatServiceImpl implements AiChatService {
         message.setTokens(tokenUsed);
         message.setResponseTime(Date.from(Instant.now()));
         aiMessagePairMapper.updateBySseIdSelective(message);
+        // 更新完成后清除缓存，确保下次查询拿到最新数据
+        redisTemplate.delete("aiMessagePairCache::" + message.getSessionId());
         AiSession aiSession = new AiSession();
         aiSession.setId(message.getSessionId());
         aiSession.setLastMessageTime(message.getResponseTime());

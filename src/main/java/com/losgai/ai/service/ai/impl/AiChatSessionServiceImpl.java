@@ -8,6 +8,7 @@ import com.losgai.ai.mapper.AiMessagePairMapper;
 import com.losgai.ai.mapper.AiSessionMapper;
 import com.losgai.ai.mq.sender.AiMessageSender;
 import com.losgai.ai.service.ai.AiChatSessionService;
+import com.losgai.ai.service.ai.AiMessagePairService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,8 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
     private final AiMessagePairMapper aiMessagePairMapper;
 
     private final AiMessageSender aiMessageSender;
+
+    private final AiMessagePairService aiMessagePairService;
 
     /**
      * 新增单条会话
@@ -75,7 +78,7 @@ public class AiChatSessionServiceImpl implements AiChatSessionService {
     @Transactional
     public void deleteById(Long id) {
         aiSessionMapper.deleteByPrimaryKey(id);
-        aiMessagePairMapper.deleteBySessionId(id);
+        aiMessagePairService.deleteBySessionId(id);
         // 删除ES中储存的会话
         aiMessageSender.sendMessageDel(
                 RabbitMQAiMessageConfig.EXCHANGE_NAME,

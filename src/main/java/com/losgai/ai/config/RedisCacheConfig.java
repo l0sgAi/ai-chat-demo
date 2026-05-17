@@ -26,6 +26,9 @@ public class RedisCacheConfig {
     // 定义 userInfo 缓存的名称
     private static final String USER_INFO_CACHE_NAME = "userInfo";
 
+    // 定义 aiMessagePair 缓存的名称
+    private static final String AI_MESSAGE_PAIR_CACHE_NAME = "aiMessagePairCache";
+
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory factory) {
         // 1. 配置默认缓存配置
@@ -42,9 +45,14 @@ public class RedisCacheConfig {
                 // 设置 userInfo 缓存的过期时间为3小时
                 .entryTtl(Duration.ofHours(3));
 
-        // 3. 将特定配置应用到对应的缓存名称
+        // 3. 针对 aiMessagePairCache 缓存进行特定配置
+        RedisCacheConfiguration messagePairCacheConfig = defaultConfig
+                .entryTtl(Duration.ofMinutes(30));
+
+        // 4. 将特定配置应用到对应的缓存名称
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
         cacheConfigurations.put(USER_INFO_CACHE_NAME, userInfoCacheConfig);
+        cacheConfigurations.put(AI_MESSAGE_PAIR_CACHE_NAME, messagePairCacheConfig);
         // 可以为其他缓存添加更多特定配置
         // cacheConfigurations.put("otherCache", otherConfig);
 
