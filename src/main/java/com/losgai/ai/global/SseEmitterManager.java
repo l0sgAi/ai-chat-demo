@@ -145,7 +145,7 @@ public class SseEmitterManager {
                     sseEmitter.send(this.getEmitterCount());
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | IllegalStateException e) {
             log.debug("线程监控发送失败: {}", e.getMessage());
             if (emitterMap.remove("thread-monitor") != null) {
                 emitterCount.decrementAndGet();
