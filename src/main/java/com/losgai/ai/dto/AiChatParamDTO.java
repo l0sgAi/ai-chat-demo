@@ -2,6 +2,7 @@ package com.losgai.ai.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class AiChatParamDTO {
     /**
      * 问题
      */
-    @NotBlank(message = "问题内容不能为空")
+    @Size(min = 1, max = 5000, message = "提示词长度必须在1到5000之间")
     @Schema(description = "用户提问内容", requiredMode = Schema.RequiredMode.REQUIRED)
     private String question;
 
