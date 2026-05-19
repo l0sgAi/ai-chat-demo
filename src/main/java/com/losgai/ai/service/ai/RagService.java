@@ -20,6 +20,15 @@ public interface RagService {
 
     void add(RagStoreDto ragStore);
 
+    List<RagStore> selectDocByPageNum(String keyword, String startTime, String endTime, Integer status);
+
+    CursorPageInfo<RagStore> selectDocByPageNum(String keyword,
+                                                String startTime,
+                                                String endTime,
+                                                Integer status,
+                                                int page,
+                                                int pageSize);
+
     List<String> getIndexes() throws IOException;
 
     void embedding(List<Long> ids) throws IOException;

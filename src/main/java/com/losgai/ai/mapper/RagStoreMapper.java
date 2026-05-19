@@ -35,6 +35,11 @@ public interface RagStoreMapper {
                          String lastUpdateTime,
                          int pageSize);
 
+    List<RagStore> queryByPage(String keyword, String startTime, String endTime, Integer status,
+                                int pageSize, long offset);
+
+    Long selectCountByCondition(String keyword, String startTime, String endTime, Integer status);
+
     List<RagStore> selectByIds(List<Long> ids);
 
     Long selectCount();

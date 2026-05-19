@@ -64,6 +64,24 @@ public class RagServiceImpl implements RagService {
     }
 
     @Override
+    public List<RagStore> selectDocByPageNum(String keyword, String startTime, String endTime, Integer status) {
+        return ragStoreMapper.queryByPage(keyword, startTime, endTime, status, Integer.MAX_VALUE, 0);
+    }
+
+    @Override
+    public CursorPageInfo<RagStore> selectDocByPageNum(String keyword,
+                                                       String startTime,
+                                                       String endTime,
+                                                       Integer status,
+                                                       int page,
+                                                       int pageSize) {
+        long offset = (long) (page - 1) * pageSize;
+        List<RagStore> list = ragStoreMapper.queryByPage(keyword, startTime, endTime, status, pageSize, offset);
+        Long total = ragStoreMapper.selectCountByCondition(keyword, startTime, endTime, status);
+        return new CursorPageInfo<>(list, total);
+    }
+
+    @Override
     @CacheEvict(value = "IndexNames", allEntries = true)
     public void add(RagStoreDto rag) {
 

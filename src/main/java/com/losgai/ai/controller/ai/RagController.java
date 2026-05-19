@@ -48,7 +48,7 @@ public class RagController {
     }
 
     @SaCheckRole("admin")
-    @GetMapping("/page")
+    @GetMapping("/page/cursor")
     @Tag(name = "分页查询RAG文档",description = "根据排序字段，游标分页查询RAG文档")
     public Result<List<RagStore>> page(
             @RequestParam(required = false) String keyword,
@@ -66,6 +66,27 @@ public class RagController {
                 lastUpdateTime,
                 pageSize);
         return Result.page(pageInfo.getList(),pageInfo.getTotal());
+    }
+
+    @SaCheckRole("admin")
+    @GetMapping("/page")
+    @Tag(name = "普通分页查询RAG文档",description = "根据page和pageSize分页查询RAG文档")
+    public Result<List<RagStore>> pageList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int pageSize
+    ) {
+        CursorPageInfo<RagStore> pageInfo = ragService.selectDocByPageNum(
+                keyword,
+                startTime,
+                endTime,
+                status,
+                page,
+                pageSize);
+        return Result.page(pageInfo.getList(), pageInfo.getTotal());
     }
 
     @SaCheckRole("admin")

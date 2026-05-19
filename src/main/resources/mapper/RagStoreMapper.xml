@@ -67,6 +67,31 @@
         limit #{pageSize}
     </select>
 
+    <select id="queryByPage" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from rag_store
+        where deleted = 0
+        <if test="keyword != null">
+            and (
+            title like concat('%',#{keyword},'%')
+            or index_name like concat('%',#{keyword},'%')
+            or content_summary like concat('%',#{keyword},'%')
+            )
+        </if>
+        <if test="startTime != null">
+            and created_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and created_time &lt;= #{endTime}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        order by updated_time desc
+        limit #{pageSize} offset #{offset}
+    </select>
+
     <select id="selectByIds" resultMap="BaseResultMap">
         select
         <include refid="Base_Column_List"/>
@@ -81,6 +106,27 @@
     <select id="selectCount" resultType="java.lang.Long">
         select count(1) from rag_store
         where deleted = 0
+    </select>
+
+    <select id="selectCountByCondition" resultType="java.lang.Long">
+        select count(1) from rag_store
+        where deleted = 0
+        <if test="keyword != null">
+            and (
+            title like concat('%',#{keyword},'%')
+            or index_name like concat('%',#{keyword},'%')
+            or content_summary like concat('%',#{keyword},'%')
+            )
+        </if>
+        <if test="startTime != null">
+            and created_time &gt;= #{startTime}
+        </if>
+        <if test="endTime != null">
+            and created_time &lt;= #{endTime}
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
     </select>
 
     <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
