@@ -15,8 +15,8 @@ public class ThreadPoolConfig {
     @Bean("aiWorkerExecutor")
     public Executor aiWorkerExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(4); // TODO 调整线程池设置
-        executor.setMaxPoolSize(4);
+        executor.setCorePoolSize(8);
+        executor.setMaxPoolSize(16);
         executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("ai-worker-");
         // 默认拒绝策略，队列满了直接抛异常

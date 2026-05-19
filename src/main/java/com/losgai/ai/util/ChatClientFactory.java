@@ -8,7 +8,7 @@ import com.losgai.ai.global.SseEmitterManager;
 import com.losgai.ai.memory.MybatisChatMemory;
 import com.losgai.ai.service.ai.RagService;
 import com.losgai.ai.tools.DateTimeTools;
-import lombok.RequiredArgsConstructor;
+import io.netty.channel.ChannelOption;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -25,6 +25,7 @@ import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugment
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -46,23 +47,35 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class ChatClientFactory {
 
     private final Map<Integer, ChatClient> clientCache = new ConcurrentHashMap<>();
 
     private final MybatisChatMemory mybatisChatMemory;
-
     private final RagService ragService;
-
     private final EmbeddingStoreFactory embeddingStoreFactory;
-
     private final SseEmitterManager sseEmitterManager;
-
     private final CustomMcpToolCallbackProvider toolCallbackProvider;
-
     private final PromptProperties promptProperties;
+    private final Executor aiWorkerExecutor;
+
+    public ChatClientFactory(
+            MybatisChatMemory mybatisChatMemory,
+            RagService ragService,
+            EmbeddingStoreFactory embeddingStoreFactory,
+            SseEmitterManager sseEmitterManager,
+            CustomMcpToolCallbackProvider toolCallbackProvider,
+            PromptProperties promptProperties,
+            @Qualifier("aiWorkerExecutor") Executor aiWorkerExecutor) {
+        this.mybatisChatMemory = mybatisChatMemory;
+        this.ragService = ragService;
+        this.embeddingStoreFactory = embeddingStoreFactory;
+        this.sseEmitterManager = sseEmitterManager;
+        this.toolCallbackProvider = toolCallbackProvider;
+        this.promptProperties = promptProperties;
+        this.aiWorkerExecutor = aiWorkerExecutor;
+    }
 
     @Value("${ai-chat-demo.openai.pool-max-connections:200}")
     private int poolMaxConnections;
@@ -72,6 +85,9 @@ public class ChatClientFactory {
 
     @Value("${ai-chat-demo.openai.response-timeout-seconds:120}")
     private int responseTimeoutSeconds;
+
+    @Value("${ai-chat-demo.openai.connect-timeout-seconds:10}")
+    private int connectTimeoutSeconds;
 
     @Value("${ai-chat-demo.openai.index-finding-timeout-seconds:30}")
     private int indexFindingTimeoutSeconds;
@@ -99,7 +115,8 @@ public class ChatClientFactory {
                 .build();
 
         HttpClient httpClient = HttpClient.create(provider)
-                .responseTimeout(Duration.ofSeconds(responseTimeoutSeconds));
+                .responseTimeout(Duration.ofSeconds(responseTimeoutSeconds))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeoutSeconds * 1000);
 
         WebClient.Builder webClientBuilder = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient));
@@ -186,7 +203,8 @@ public class ChatClientFactory {
                                 .system(promptProperties.getIndexFindingSystemMsg())
                                 .user(INDEX_FINDING_USER_MSG)
                                 .call()
-                                .content()
+                                .content(),
+                        aiWorkerExecutor
                 ).get(indexFindingTimeoutSeconds, TimeUnit.SECONDS);
             } catch (TimeoutException e) {
                 log.warn("RAG索引查找超时({}s)，跳过RAG步骤, sessionId: {}", indexFindingTimeoutSeconds, sessionId);

@@ -113,6 +113,7 @@ ai-chat-demo:
     pool-max-connections: 200  # OpenAI HTTP连接池最大连接数
     pool-acquire-timeout-seconds: 30  # 连接池获取连接超时(秒)
     response-timeout-seconds: 120  # API响应超时(秒)
+    connect-timeout-seconds: 10  # HTTP连接建立超时(秒)
     index-finding-timeout-seconds: 30  # RAG索引查找超时(秒)
   prompts:
     index-finding-system-msg: |
