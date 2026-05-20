@@ -107,10 +107,10 @@ ai-chat-demo:
     secretKey: admin123456
     bucketName: ai-chat-multimodel-bucket
   sse:
-    session-limit: 200  # 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
-    stream-concurrency-limit: 101  # 同时进行的AI流式对话并发数（信号量限流）
+    session-limit: 100  # 支持的同时在线人数=SESSION_LIMIT-1 有一个监控sse
+    stream-concurrency-limit: 100  # 同时进行的AI流式对话并发数（信号量限流）
   openai:
-    pool-max-connections: 200  # OpenAI HTTP连接池最大连接数
+    pool-max-connections: 100  # OpenAI HTTP连接池最大连接数
     pool-acquire-timeout-seconds: 30  # 连接池获取连接超时(秒)
     response-timeout-seconds: 120  # API响应超时(秒)
     connect-timeout-seconds: 10  # HTTP连接建立超时(秒)
