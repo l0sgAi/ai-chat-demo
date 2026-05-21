@@ -28,17 +28,16 @@ public class AiChatController {
 
     @PostMapping("/send")
     @Tag(name = "ai会话请求",description = "通过参数获取AI对话请求，返回唯一会话id")
-    public Result<String> sendQuestion(@Valid @RequestBody AiChatParamDTO aiChatParamDTO) {
+    public CompletableFuture<Result<String>> sendQuestion(@Valid @RequestBody AiChatParamDTO aiChatParamDTO) {
         String sessionId = UUID.randomUUID() + "_" + currentTimeMillis();
         aiChatParamDTO.setChatSessionId(sessionId);
-//        CompletableFuture<Boolean> future = aiChatService.sendQuestionAsync(aiChatParamDTO, sessionId);
         CompletableFuture<Boolean> future = aiChatService.sendQuestionAsyncWithMemo(aiChatParamDTO, sessionId);
-        // 立即获取结果（因为拒绝时会同步返回）
-        boolean accepted = future.join();
-        if (!accepted) {
-            return Result.error("系统繁忙，请稍后再试");
-        }
-        return Result.success(sessionId);
+        return future.thenApply(accepted -> {
+            if (!accepted) {
+                return Result.error("系统繁忙，请稍后再试");
+            }
+            return Result.success(sessionId);
+        });
     }
 
     @GetMapping("/stream/{sessionId}")
@@ -48,13 +47,9 @@ public class AiChatController {
     }
 
     @PutMapping("/stop/{sessionId}")
-    @Tag(name = "SSE对话流中断",description = "更新Redis缓存标识位，让对话响应流中断")
+    @Tag(name = "SSE对话流中断",description = "中断SSE对话流")
     public Result<String> stop(@PathVariable String sessionId) {
-        SseEmitter emitter = sseEmitterManager.getEmitter(sessionId);
-        if (emitter != null) {
-            emitter.complete();
-        }
-        sseEmitterManager.removeEmitter(sessionId);
+        sseEmitterManager.removeAndComplete(sessionId);
         return Result.success("中断设置成功");
     }
 

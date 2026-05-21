@@ -2,6 +2,7 @@ package com.losgai.ai.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -20,6 +21,7 @@ public class AiChatParamDTO {
     /**
      * 对话id
      */
+    @NotNull(message = "对话id不能为空")
     @Schema(description = "对话id")
     private Long conversationId;
 
@@ -33,6 +35,7 @@ public class AiChatParamDTO {
     /**
      * 模型ID
      */
+    @NotNull(message = "模型ID不能为空")
     @Schema(description = "模型ID")
     private Integer modelId;
 

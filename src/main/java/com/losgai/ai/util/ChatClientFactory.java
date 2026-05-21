@@ -139,6 +139,7 @@ public class ChatClientFactory {
         ChatModel chatModel = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(chatOptions)
+                .toolCallingManager(new SafeToolCallingManager())
                 .build();
 
         return ChatClient.builder(chatModel)

@@ -95,21 +95,8 @@ public class AiChatServiceImpl implements AiChatService {
                     return;
                 }
                 Long conversationId = aiChatParamDTO.getConversationId();
-                if (conversationId == null) {
-                    future.complete(false);
-                    return;
-                }
 
-                // 限流：获取信号量
-                try {
-                    streamSemaphore.acquire();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    future.complete(false);
-                    return;
-                }
-
-                // rawContent: 存库用原始文本; displaySb: SSE展示用转义文本
+                // 所有状态变量在 future.complete 前初始化，确保回调安全
                 StringBuilder rawContent = new StringBuilder();
                 StringBuilder reasoningContent = new StringBuilder();
                 AiMessagePair aiMessagePair = new AiMessagePair();
@@ -146,22 +133,38 @@ public class AiChatServiceImpl implements AiChatService {
                     releaseSemaphore.run();
                 });
 
-                // 在流式订阅前同步INSERT，消除前端INSERT与后端UPDATE的竞态
-                aiMessagePair.setUserContent(aiChatParamDTO.getQuestion());
-                aiMessagePair.setModelUsed(aiChatParamDTO.getModelId());
-                aiMessagePair.setStatus(AiMessageStatusEnum.GENERATING.getCode());
-                aiMessagePair.setCreateTime(Date.from(Instant.now()));
-                aiMessagePairMapper.insertSelective(aiMessagePair);
-                // 清除该会话的消息缓存
-                redisTemplate.delete("aiMessagePairCache::" + aiMessagePair.getSessionId());
-                // 更新会话最后消息时间
-                AiSession sessionUpdate = new AiSession();
-                sessionUpdate.setId(aiMessagePair.getSessionId());
-                sessionUpdate.setLastMessageTime(aiMessagePair.getCreateTime());
-                aiSessionMapper.updateByPrimaryKeySelective(sessionUpdate);
-
-                // 提前完成future，释放Tomcat线程
+                // 提前完成 future，释放 Tomcat 线程和 HTTP 响应
                 future.complete(true);
+
+                // 以下操作在 future 完成后执行，失败通过 SSE 流通知客户端
+                try {
+                    streamSemaphore.acquire();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    sendErrorAndComplete(finalEmitter, sessionId, "系统繁忙，请稍后再试");
+                    return;
+                }
+
+                try {
+                    // 同步INSERT，消除前端INSERT与后端UPDATE的竞态
+                    aiMessagePair.setUserContent(aiChatParamDTO.getQuestion());
+                    aiMessagePair.setModelUsed(aiChatParamDTO.getModelId());
+                    aiMessagePair.setStatus(AiMessageStatusEnum.GENERATING.getCode());
+                    aiMessagePair.setCreateTime(Date.from(Instant.now()));
+                    aiMessagePairMapper.insertSelective(aiMessagePair);
+                    // 清除该会话的消息缓存
+                    redisTemplate.delete("aiMessagePairCache::" + aiMessagePair.getSessionId());
+                    // 更新会话最后消息时间
+                    AiSession sessionUpdate = new AiSession();
+                    sessionUpdate.setId(aiMessagePair.getSessionId());
+                    sessionUpdate.setLastMessageTime(aiMessagePair.getCreateTime());
+                    aiSessionMapper.updateByPrimaryKeySelective(sessionUpdate);
+                } catch (Exception e) {
+                    log.error("消息入库失败, sessionId: {}", sessionId, e);
+                    sendErrorAndComplete(finalEmitter, sessionId, "系统错误，请重试");
+                    releaseSemaphore.run();
+                    return;
+                }
 
                 // 分离streamChat调用，捕获同步异常并释放信号量
                 Flux<ChatResponse> flux;
@@ -313,14 +316,7 @@ public class AiChatServiceImpl implements AiChatService {
      */
     @Override
     public SseEmitter getEmitter(String sessionId) {
-        // 获取对应sessionId的sseEmitter
-        SseEmitter emitter = emitterManager.getEmitter(sessionId);
-        if (emitter != null) {
-            emitter.onCompletion(() -> emitterManager.removeEmitter(sessionId));
-            emitter.onTimeout(() -> emitterManager.removeEmitter(sessionId));
-            return emitter;
-        }
-        return null;
+        return emitterManager.getEmitter(sessionId);
     }
 
     /**
@@ -358,6 +354,19 @@ public class AiChatServiceImpl implements AiChatService {
         if (cleaned.compareAndSet(false, true)) {
             emitterManager.removeEmitter(sessionId);
         }
+    }
+
+    /**
+     * future 完成后发生错误时，通过 SSE 流通知客户端并关闭 emitter
+     */
+    private void sendErrorAndComplete(SseEmitter emitter, String sessionId, String errorMsg) {
+        try {
+            emitter.send(SseEmitter.event().name("error").data(errorMsg));
+        } catch (Exception ignored) {}
+        try {
+            emitter.complete();
+        } catch (Exception ignored) {}
+        // onCompletion 回调会执行 removeEmitter
     }
 
     /**

@@ -65,6 +65,21 @@ public class SseEmitterManager {
         }
     }
 
+    /**
+     * 原子地移除并完成 emitter，避免 stop 端点与回调的竞态
+     */
+    public void removeAndComplete(String sessionId) {
+        SseEmitter emitter = emitterMap.remove(sessionId);
+        if (emitter != null) {
+            emitterCount.decrementAndGet();
+            lastActivityMap.remove(sessionId);
+            this.notifyThreadCount();
+            try {
+                emitter.complete();
+            } catch (Exception ignored) {}
+        }
+    }
+
     public boolean isOverLoad() {
         return emitterCount.get() >= sessionLimit;
     }
