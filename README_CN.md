@@ -1,5 +1,7 @@
 # AI-CHAT DEMO
 
+**[English](README.md) | 中文**
+
 ### 一个AI大模型聊天机器人项目
 
 > 对应前端的地址：https://github.com/l0sgAi/ai-chat-front
